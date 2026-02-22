@@ -7,6 +7,7 @@ Use this index to navigate the repository by action/workflow.
 1. Runtime overview: `docs/how-it-works-now.md`
 2. Architecture target: `docs/architecture.md`
 3. Refactor roadmap/status: `docs/refactor-plan.md`
+4. Future direction roadmap: `docs/future-roadmap.md`
 
 ## Topic Guides
 

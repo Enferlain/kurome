@@ -9,6 +9,9 @@ if [[ ! -x "$PYTHON_BIN" ]]; then
   echo "error: python interpreter not found: $PYTHON_BIN" >&2
   exit 1
 fi
+# Avoid permission issues writing bytecode/cache on shared mounts.
+export PYTHONPYCACHEPREFIX="${PYTHONPYCACHEPREFIX:-/tmp/kurome-pyc}"
+PYTEST_CACHE_DIR="${PYTEST_CACHE_DIR:-/tmp/kurome-pytest-cache}"
 
 VENV_BIN_DIR="$(cd "$(dirname "$PYTHON_BIN")" && pwd)"
 RUFF_BIN="${RUFF_BIN:-$VENV_BIN_DIR/ruff}"
@@ -76,10 +79,10 @@ if [[ "$TYPECHECK_MODE" != "off" ]]; then
 fi
 
 echo "[quality] unit"
-PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 "$PYTHON_BIN" -m pytest tests/unit -q -s
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 "$PYTHON_BIN" -m pytest tests/unit -q -s -o "cache_dir=$PYTEST_CACHE_DIR"
 
 echo "[quality] integration"
-PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 "$PYTHON_BIN" -m pytest tests/integration -q -s
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 "$PYTHON_BIN" -m pytest tests/integration -q -s -o "cache_dir=$PYTEST_CACHE_DIR"
 
 echo "[quality] smoke"
 scripts/smoke/run_smoke.sh

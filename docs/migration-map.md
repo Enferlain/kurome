@@ -167,20 +167,20 @@ kurome/
 Use these as regression checks after each slice affecting the path.
 
 1. Embeddings training path
-- `python train.py --config config/anatomy_dinov2.yaml --help` (arg parsing sanity)
+- `python -m kurome.cli.train_embeddings --config config/anatomy_dinov2.yaml --help` (arg parsing sanity)
 
 2. Feature training path
-- `python train_features.py --config config/anatomy_so400.yaml --help` (arg parsing sanity)
+- `python -m kurome.cli.train_features --config config/anatomy_so400.yaml --help` (arg parsing sanity)
 
 3. Inference path
-- `python inference.py --help` (if CLI supports it) or minimal import/constructor smoke
+- `python -m kurome.cli.infer_folder --help`
 
 4. Compile checks
 - `python3 -m py_compile` on touched files
 
 ## 7. Exit Criteria for Migration Completion
 Migration is complete when:
-1. Root scripts are thin compatibility wrappers.
+1. Root compatibility wrappers are removed; package CLIs are canonical.
 2. Config, data, model factory, training engine, and inference pipeline live under `kurome/`.
 3. Registry-based model support is in use for current supported model families.
 4. Smoke checks and tests pass from package CLIs.

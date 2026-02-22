@@ -10,7 +10,7 @@ These notes track compatibility surfaces that remain for transition safety.
 Replacement entrypoints:
 - `python -m kurome.cli.train_embeddings --config <config.yaml>`
 - `python -m kurome.cli.train_features --config <config.yaml>`
-- package inference path via `kurome/inference/*` and `kurome/cli/infer.py`
+- package inference path via `kurome/inference/*` and `kurome/cli/infer_folder.py`
 
 Removal execution details are tracked in `docs/wrapper-removal-checklist.md`.
 
