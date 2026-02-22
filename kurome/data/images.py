@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from cityclassifiers.data.dataloaders import (
+from kurome.data.dataloaders import (
     build_training_dataloader,
     build_validation_dataloader,
     log_train_val_loader_summary,
 )
-from cityclassifiers.data.datasets.image_dataset import ImageFolderDataset, collate_group_by_size
+from kurome.data.datasets.image_dataset import ImageFolderDataset, collate_group_by_size
 
 
 def build_image_training_dataloaders(args, image_processor):

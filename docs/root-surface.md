@@ -4,7 +4,7 @@ This document defines the intended repository-root footprint after wrapper and l
 
 ## Why this exists
 - Prevent accidental growth of root-level scripts.
-- Keep implementation code in package modules (`cityclassifiers/*`).
+- Keep implementation code in package modules (`kurome/*`).
 - Make any root-level exceptions explicit and reviewable.
 
 ## Root categories
@@ -16,7 +16,7 @@ This document defines the intended repository-root footprint after wrapper and l
    - `pyproject.toml`
    - `uv.lock`
 2. Root launcher:
-   - `launch.py` (dispatches to package CLIs under `cityclassifiers/cli/*`)
+   - `launch.py` (dispatches to package CLIs under `kurome/cli/*`)
 
 ## Enforcement
 Root surface is checked by:

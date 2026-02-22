@@ -8,9 +8,9 @@ These notes track compatibility surfaces that remain for transition safety.
 - `inference.py` (removed)
 
 Replacement entrypoints:
-- `python -m cityclassifiers.cli.train_embeddings --config <config.yaml>`
-- `python -m cityclassifiers.cli.train_features --config <config.yaml>`
-- package inference path via `cityclassifiers/inference/*` and `cityclassifiers/cli/infer.py`
+- `python -m kurome.cli.train_embeddings --config <config.yaml>`
+- `python -m kurome.cli.train_features --config <config.yaml>`
+- package inference path via `kurome/inference/*` and `kurome/cli/infer.py`
 
 Removal execution details are tracked in `docs/wrapper-removal-checklist.md`.
 
@@ -21,11 +21,11 @@ Root-level file policy and enforcement are tracked in `docs/root-surface.md`.
 Wrapper command references are constrained by `scripts/quality/check_wrapper_references.py`.
 
 Preferred import paths for new code:
-- `cityclassifiers.config.*`
-- `cityclassifiers.data.*`
-- `cityclassifiers.models.*`
-- `cityclassifiers.training.*`
-- `cityclassifiers.inference.*`
+- `kurome.config.*`
+- `kurome.data.*`
+- `kurome.models.*`
+- `kurome.training.*`
+- `kurome.inference.*`
 
 ## Legacy internals policy
 New code should use package modules only. Any reintroduction of root-level implementation modules should be treated

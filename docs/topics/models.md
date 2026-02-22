@@ -4,11 +4,11 @@ Model support is registry-driven and split into backbones, heads, and task losse
 
 ## Model Surfaces
 
-1. Backbones/wrappers: `cityclassifiers/models/backbones/*`
-2. Heads: `cityclassifiers/models/heads/*`
-3. Task losses/helpers: `cityclassifiers/models/tasks/*`
-4. Registry: `cityclassifiers/models/registry.py`
-5. Factory: `cityclassifiers/models/factory.py`
+1. Backbones/wrappers: `kurome/models/backbones/*`
+2. Heads: `kurome/models/heads/*`
+3. Task losses/helpers: `kurome/models/tasks/*`
+4. Registry: `kurome/models/registry.py`
+5. Factory: `kurome/models/factory.py`
 
 ## How Models Are Selected
 
@@ -21,7 +21,7 @@ Model support is registry-driven and split into backbones, heads, and task losse
 
 1. Implement class in the right package folder.
 2. Export from package `__init__.py`.
-3. Register in `cityclassifiers/models/registry.py`.
+3. Register in `kurome/models/registry.py`.
 4. Update config (`model.model_id` and params).
 5. Add tests for registry/factory resolution.
 

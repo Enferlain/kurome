@@ -13,20 +13,20 @@ REPO_ROOT = Path(__file__).resolve().parent
 
 TASKS: dict[str, list[str]] = {
     # Training
-    "train-embeddings": [sys.executable, "-m", "cityclassifiers.cli.train_embeddings"],
-    "train-features": [sys.executable, "-m", "cityclassifiers.cli.train_features"],
+    "train-embeddings": [sys.executable, "-m", "kurome.cli.train_embeddings"],
+    "train-features": [sys.executable, "-m", "kurome.cli.train_features"],
     # Dataset / feature generation
-    "build-embeddings": [sys.executable, "-m", "cityclassifiers.cli.generate_embeddings"],
-    "build-features": [sys.executable, "-m", "cityclassifiers.cli.generate_feature_sequences"],
+    "build-embeddings": [sys.executable, "-m", "kurome.cli.generate_embeddings"],
+    "build-features": [sys.executable, "-m", "kurome.cli.generate_feature_sequences"],
     # Inference (folder pipeline)
-    "infer-folder": [sys.executable, "-m", "cityclassifiers.cli.infer_folder"],
+    "infer-folder": [sys.executable, "-m", "kurome.cli.infer_folder"],
 }
 
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Launch CityClassifiers workflows from a single root entrypoint. "
+            "Launch kurome workflows from a single root entrypoint. "
             "Use '--' to forward task-specific arguments."
         )
     )

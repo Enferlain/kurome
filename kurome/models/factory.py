@@ -7,7 +7,7 @@ from typing import Any
 
 import torch.nn as nn
 
-from cityclassifiers.models.tasks import FocalLoss, GHMC_Loss
+from kurome.models.tasks import FocalLoss, GHMC_Loss
 
 from .registry import get_model_class
 

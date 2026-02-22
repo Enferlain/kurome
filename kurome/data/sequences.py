@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import os
 
-from cityclassifiers.data.dataloaders import (
+from kurome.data.dataloaders import (
     build_training_dataloader,
     build_validation_dataloader,
     log_train_val_loader_summary,
 )
-from cityclassifiers.data.datasets.sequence_dataset import FeatureSequenceDataset, collate_sequences
+from kurome.data.datasets.sequence_dataset import FeatureSequenceDataset, collate_sequences
 
 
 def build_feature_sequence_dataloaders(args):

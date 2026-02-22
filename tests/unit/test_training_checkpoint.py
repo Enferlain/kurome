@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from types import SimpleNamespace
 
-from cityclassifiers.training.checkpoint import (
+from kurome.training.checkpoint import (
     load_checkpoint,
     maybe_save_periodic_checkpoint,
     update_best_and_maybe_save,

@@ -39,8 +39,8 @@ def test_legacy_root_helper_modules_removed() -> None:
 
 def test_cli_modules_define_main() -> None:
     for rel_path in [
-        "cityclassifiers/cli/train_embeddings.py",
-        "cityclassifiers/cli/train_features.py",
+        "kurome/cli/train_embeddings.py",
+        "kurome/cli/train_features.py",
     ]:
         module = ast.parse((REPO_ROOT / rel_path).read_text(encoding="utf-8"))
         fn_names = {node.name for node in module.body if isinstance(node, ast.FunctionDef)}
@@ -48,9 +48,9 @@ def test_cli_modules_define_main() -> None:
 
 
 def test_inference_pipeline_uses_package_head_adapters() -> None:
-    text = (REPO_ROOT / "cityclassifiers" / "inference" / "pipeline.py").read_text(encoding="utf-8")
-    assert "from cityclassifiers.models.heads import (" in text
-    assert "from cityclassifiers.inference.postprocess import (" in text
+    text = (REPO_ROOT / "kurome" / "inference" / "pipeline.py").read_text(encoding="utf-8")
+    assert "from kurome.models.heads import (" in text
+    assert "from kurome.inference.postprocess import (" in text
     assert "from model import PredictorModel" not in text
     assert "from head_model import HeadModel" not in text
     assert "from hybrid_model import HybridHeadModel" not in text
@@ -58,13 +58,13 @@ def test_inference_pipeline_uses_package_head_adapters() -> None:
 
 def test_package_model_modules_do_not_import_legacy_root_models() -> None:
     sequence_text = (
-        REPO_ROOT / "cityclassifiers" / "models" / "heads" / "sequence_head.py"
+        REPO_ROOT / "kurome" / "models" / "heads" / "sequence_head.py"
     ).read_text(encoding="utf-8")
     hybrid_text = (
-        REPO_ROOT / "cityclassifiers" / "models" / "heads" / "hybrid_head.py"
+        REPO_ROOT / "kurome" / "models" / "heads" / "hybrid_head.py"
     ).read_text(encoding="utf-8")
     early_text = (
-        REPO_ROOT / "cityclassifiers" / "models" / "backbones" / "early_extract.py"
+        REPO_ROOT / "kurome" / "models" / "backbones" / "early_extract.py"
     ).read_text(encoding="utf-8")
 
     assert "from head_model import HeadModel" not in sequence_text
@@ -103,7 +103,7 @@ def test_wrapper_reference_checker_exists() -> None:
 
 
 def test_config_loader_reads_yaml_mapping() -> None:
-    from cityclassifiers.config.loader import load_experiment_config, load_raw_config
+    from kurome.config.loader import load_experiment_config, load_raw_config
 
     config_path = REPO_ROOT / "config" / "anatomy_dinov3_7b_bnb.yaml"
     config = load_raw_config(str(config_path))
@@ -121,7 +121,7 @@ def test_config_loader_reads_yaml_mapping() -> None:
 
 
 def test_config_loader_supports_legacy_yaml_shape() -> None:
-    from cityclassifiers.config.loader import load_experiment_config
+    from kurome.config.loader import load_experiment_config
 
     experiment = load_experiment_config(str(REPO_ROOT / "config" / "anatomy_dinov2.yaml"))
     assert experiment.data.mode == "embeddings"
@@ -131,7 +131,7 @@ def test_config_loader_supports_legacy_yaml_shape() -> None:
 
 
 def test_config_normalization_rejects_invalid_mode() -> None:
-    from cityclassifiers.config.loader import normalize_experiment_config
+    from kurome.config.loader import normalize_experiment_config
 
     bad = {
         "model": {
@@ -148,7 +148,7 @@ def test_config_normalization_rejects_invalid_mode() -> None:
 
 
 def test_data_contract_constants() -> None:
-    from cityclassifiers.data.contracts import EMBEDDING_BATCH_KEYS, IMAGE_BATCH_KEYS, SEQUENCE_BATCH_KEYS
+    from kurome.data.contracts import EMBEDDING_BATCH_KEYS, IMAGE_BATCH_KEYS, SEQUENCE_BATCH_KEYS
 
     assert EMBEDDING_BATCH_KEYS == ("emb", "val")
     assert SEQUENCE_BATCH_KEYS == ("sequence", "mask", "label")
@@ -156,12 +156,12 @@ def test_data_contract_constants() -> None:
 
 
 def test_model_factory_registry_basics() -> None:
-    from cityclassifiers.models.factory import (
+    from kurome.models.factory import (
         build_criterion,
         build_model_with_filtered_kwargs,
         resolve_num_classes,
     )
-    from cityclassifiers.models.registry import get_model_class
+    from kurome.models.registry import get_model_class
 
     model_cls = get_model_class("head_model")
     assert model_cls.__name__ == "HeadModel"
@@ -203,32 +203,32 @@ def test_model_factory_registry_basics() -> None:
     with pytest.raises(ValueError):
         build_model_with_filtered_kwargs("early_extract_model", {"hidden_dim": 16})
 
-    registry_text = (REPO_ROOT / "cityclassifiers" / "models" / "registry.py").read_text(encoding="utf-8")
-    factory_text = (REPO_ROOT / "cityclassifiers" / "models" / "factory.py").read_text(encoding="utf-8")
-    engine_text = (REPO_ROOT / "cityclassifiers" / "training" / "engine.py").read_text(encoding="utf-8")
+    registry_text = (REPO_ROOT / "kurome" / "models" / "registry.py").read_text(encoding="utf-8")
+    factory_text = (REPO_ROOT / "kurome" / "models" / "factory.py").read_text(encoding="utf-8")
+    engine_text = (REPO_ROOT / "kurome" / "training" / "engine.py").read_text(encoding="utf-8")
 
     assert "from .heads import HeadModel, HybridHeadModel, PredictorModel" in registry_text
     assert "from .backbones import EarlyExtractAnatomyModel" in registry_text
     assert "from head_model import HeadModel" not in registry_text
     assert "from model import PredictorModel" not in registry_text
 
-    assert "from cityclassifiers.models.tasks import FocalLoss, GHMC_Loss" in factory_text
+    assert "from kurome.models.tasks import FocalLoss, GHMC_Loss" in factory_text
     assert "from losses import FocalLoss, GHMC_Loss" not in factory_text
-    assert "from cityclassifiers.models.tasks import FocalLoss, GHMC_Loss" in engine_text
+    assert "from kurome.models.tasks import FocalLoss, GHMC_Loss" in engine_text
     assert "from losses import FocalLoss, GHMC_Loss" not in engine_text
 
     tasks_losses_text = (
-        REPO_ROOT / "cityclassifiers" / "models" / "tasks" / "losses.py"
+        REPO_ROOT / "kurome" / "models" / "tasks" / "losses.py"
     ).read_text(encoding="utf-8")
     predictor_text = (
-        REPO_ROOT / "cityclassifiers" / "models" / "heads" / "predictor.py"
+        REPO_ROOT / "kurome" / "models" / "heads" / "predictor.py"
     ).read_text(encoding="utf-8")
     assert "from losses import FocalLoss, GHMC_Loss" not in tasks_losses_text
     assert "from model import PredictorModel" not in predictor_text
 
 
 def test_config_normalization_propagates_model_id() -> None:
-    from cityclassifiers.config.loader import normalize_experiment_config
+    from kurome.config.loader import normalize_experiment_config
 
     runtime_args = SimpleNamespace()
     raw = {
@@ -249,7 +249,7 @@ def test_config_normalization_propagates_model_id() -> None:
 
 
 def test_config_normalization_uses_raw_data_keys_over_runtime_fallbacks() -> None:
-    from cityclassifiers.config.loader import normalize_experiment_config
+    from kurome.config.loader import normalize_experiment_config
 
     runtime_args = SimpleNamespace(data_root="runtime-root", val_split_count=999)
     raw = {
@@ -269,7 +269,7 @@ def test_config_normalization_uses_raw_data_keys_over_runtime_fallbacks() -> Non
 
 
 def test_config_normalization_infers_images_mode_from_model_flag() -> None:
-    from cityclassifiers.config.loader import normalize_experiment_config
+    from kurome.config.loader import normalize_experiment_config
 
     raw = {
         "model": {
@@ -288,54 +288,54 @@ def test_config_normalization_infers_images_mode_from_model_flag() -> None:
 
 
 def test_train_embeddings_uses_factory_registry_path() -> None:
-    text = (REPO_ROOT / "cityclassifiers" / "cli" / "train_embeddings.py").read_text(encoding="utf-8")
-    assert "from cityclassifiers.models.factory import (" in text
+    text = (REPO_ROOT / "kurome" / "cli" / "train_embeddings.py").read_text(encoding="utf-8")
+    assert "from kurome.models.factory import (" in text
     assert "from model_early_extract import EarlyExtractAnatomyModel" not in text
     assert "from utils import (" not in text
     assert 'embedding_model_id = str(experiment.model.model_id or "hybrid_head_model").strip().lower()' in text
 
 
 def test_training_clis_delegate_dataloaders_to_data_layer() -> None:
-    embeddings_text = (REPO_ROOT / "cityclassifiers" / "cli" / "train_embeddings.py").read_text(
+    embeddings_text = (REPO_ROOT / "kurome" / "cli" / "train_embeddings.py").read_text(
         encoding="utf-8"
     )
-    features_text = (REPO_ROOT / "cityclassifiers" / "cli" / "train_features.py").read_text(
+    features_text = (REPO_ROOT / "kurome" / "cli" / "train_features.py").read_text(
         encoding="utf-8"
     )
 
-    assert "from cityclassifiers.data.embeddings import build_embedding_training_dataloaders" in embeddings_text
-    assert "from cityclassifiers.data.images import build_image_training_dataloaders" in embeddings_text
-    assert "from cityclassifiers.data.transforms import load_image_processor" in embeddings_text
+    assert "from kurome.data.embeddings import build_embedding_training_dataloaders" in embeddings_text
+    assert "from kurome.data.images import build_image_training_dataloaders" in embeddings_text
+    assert "from kurome.data.transforms import load_image_processor" in embeddings_text
     assert "return build_image_training_dataloaders(args, image_processor=image_processor)" in embeddings_text
     assert "return build_embedding_training_dataloaders(args, image_processor=image_processor)" in embeddings_text
 
-    assert "from cityclassifiers.data.sequences import build_feature_sequence_dataloaders" in features_text
+    assert "from kurome.data.sequences import build_feature_sequence_dataloaders" in features_text
     assert "return build_feature_sequence_dataloaders(args)" in features_text
     assert "from utils import (" not in features_text
 
 
 def test_config_loader_avoids_root_utils_dependency() -> None:
-    text = (REPO_ROOT / "cityclassifiers" / "config" / "loader.py").read_text(encoding="utf-8")
+    text = (REPO_ROOT / "kurome" / "config" / "loader.py").read_text(encoding="utf-8")
     assert "from utils import parse_and_load_args" not in text
-    assert "from cityclassifiers.config.runtime_args import parse_and_load_args as legacy_parse_and_load_args" in text
+    assert "from kurome.config.runtime_args import parse_and_load_args as legacy_parse_and_load_args" in text
 
 
 def test_data_adapters_use_shared_dataloader_helper() -> None:
-    embeddings_text = (REPO_ROOT / "cityclassifiers" / "data" / "embeddings.py").read_text(encoding="utf-8")
-    images_text = (REPO_ROOT / "cityclassifiers" / "data" / "images.py").read_text(encoding="utf-8")
-    sequences_text = (REPO_ROOT / "cityclassifiers" / "data" / "sequences.py").read_text(encoding="utf-8")
+    embeddings_text = (REPO_ROOT / "kurome" / "data" / "embeddings.py").read_text(encoding="utf-8")
+    images_text = (REPO_ROOT / "kurome" / "data" / "images.py").read_text(encoding="utf-8")
+    sequences_text = (REPO_ROOT / "kurome" / "data" / "sequences.py").read_text(encoding="utf-8")
 
-    assert "from cityclassifiers.data.dataloaders import (" in embeddings_text
+    assert "from kurome.data.dataloaders import (" in embeddings_text
     assert "build_training_dataloader(" in embeddings_text
     assert "build_validation_dataloader(" in embeddings_text
     assert "log_train_val_loader_summary(" in embeddings_text
 
-    assert "from cityclassifiers.data.dataloaders import (" in images_text
+    assert "from kurome.data.dataloaders import (" in images_text
     assert "build_training_dataloader(" in images_text
     assert "build_validation_dataloader(" in images_text
     assert "log_train_val_loader_summary(" in images_text
 
-    assert "from cityclassifiers.data.dataloaders import (" in sequences_text
+    assert "from kurome.data.dataloaders import (" in sequences_text
     assert "build_training_dataloader(" in sequences_text
     assert "build_validation_dataloader(" in sequences_text
     assert "log_train_val_loader_summary(" in sequences_text
@@ -346,32 +346,32 @@ def test_data_adapters_use_shared_dataloader_helper() -> None:
 
 
 def test_train_embeddings_avoids_direct_autoprocessor_import() -> None:
-    text = (REPO_ROOT / "cityclassifiers" / "cli" / "train_embeddings.py").read_text(encoding="utf-8")
+    text = (REPO_ROOT / "kurome" / "cli" / "train_embeddings.py").read_text(encoding="utf-8")
 
     assert "from transformers import AutoProcessor" not in text
     assert "image_processor = load_image_processor(experiment.model.base_vision_model)" in text
 
 
 def test_training_clis_delegate_training_loops() -> None:
-    embeddings_text = (REPO_ROOT / "cityclassifiers" / "cli" / "train_embeddings.py").read_text(
+    embeddings_text = (REPO_ROOT / "kurome" / "cli" / "train_embeddings.py").read_text(
         encoding="utf-8"
     )
-    features_text = (REPO_ROOT / "cityclassifiers" / "cli" / "train_features.py").read_text(
+    features_text = (REPO_ROOT / "kurome" / "cli" / "train_features.py").read_text(
         encoding="utf-8"
     )
 
-    assert "from cityclassifiers.training.loops import run_embedding_training_loop" in embeddings_text
+    assert "from kurome.training.loops import run_embedding_training_loop" in embeddings_text
     assert "run_embedding_training_loop(" in embeddings_text
     assert 'is_e2e=getattr(args, "is_end_to_end", False)' in embeddings_text
 
-    assert "from cityclassifiers.training.loops import run_feature_sequence_training_loop" in features_text
+    assert "from kurome.training.loops import run_feature_sequence_training_loop" in features_text
     assert "run_feature_sequence_training_loop(" in features_text
 
 
 def test_training_loops_use_shared_engine_helpers() -> None:
-    loops_text = (REPO_ROOT / "cityclassifiers" / "training" / "loops.py").read_text(encoding="utf-8")
+    loops_text = (REPO_ROOT / "kurome" / "training" / "loops.py").read_text(encoding="utf-8")
 
-    assert "from cityclassifiers.training.engine import (" in loops_text
+    assert "from kurome.training.engine import (" in loops_text
     assert "ensure_training_mode(" in loops_text
     assert "maybe_step_scheduler(" in loops_text
     assert "update_progress_postfix(" in loops_text
@@ -390,28 +390,28 @@ def test_training_loops_use_shared_engine_helpers() -> None:
 
 
 def test_training_clis_use_shared_optim_and_checkpoint_modules() -> None:
-    embeddings_text = (REPO_ROOT / "cityclassifiers" / "cli" / "train_embeddings.py").read_text(
+    embeddings_text = (REPO_ROOT / "kurome" / "cli" / "train_embeddings.py").read_text(
         encoding="utf-8"
     )
-    features_text = (REPO_ROOT / "cityclassifiers" / "cli" / "train_features.py").read_text(
+    features_text = (REPO_ROOT / "kurome" / "cli" / "train_features.py").read_text(
         encoding="utf-8"
     )
 
-    assert "from cityclassifiers.training.optim import setup_optimizer_scheduler as setup_optimizer_scheduler_common" in embeddings_text
-    assert "from cityclassifiers.training.checkpoint import load_checkpoint as load_checkpoint_common" in embeddings_text
+    assert "from kurome.training.optim import setup_optimizer_scheduler as setup_optimizer_scheduler_common" in embeddings_text
+    assert "from kurome.training.checkpoint import load_checkpoint as load_checkpoint_common" in embeddings_text
     assert "return setup_optimizer_scheduler_common(" in embeddings_text
     assert "return load_checkpoint_common(" in embeddings_text
 
-    assert "from cityclassifiers.training.optim import setup_optimizer_scheduler as setup_optimizer_scheduler_common" in features_text
-    assert "from cityclassifiers.training.checkpoint import load_checkpoint as load_checkpoint_common" in features_text
+    assert "from kurome.training.optim import setup_optimizer_scheduler as setup_optimizer_scheduler_common" in features_text
+    assert "from kurome.training.checkpoint import load_checkpoint as load_checkpoint_common" in features_text
     assert "return setup_optimizer_scheduler_common(" in features_text
     assert "return load_checkpoint_common(" in features_text
 
 
 def test_training_clis_use_shared_metrics_and_checkpoint_save_helpers() -> None:
-    loops_text = (REPO_ROOT / "cityclassifiers" / "training" / "loops.py").read_text(encoding="utf-8")
+    loops_text = (REPO_ROOT / "kurome" / "training" / "loops.py").read_text(encoding="utf-8")
 
-    assert "from cityclassifiers.training.metrics import (" in loops_text
+    assert "from kurome.training.metrics import (" in loops_text
     assert "log_eval_loss(" in loops_text
     assert "append_and_average_validation_loss(" in loops_text
     assert "log_eval_and_average(" in loops_text
@@ -424,7 +424,7 @@ def test_engine_loss_helpers_basics() -> None:
     import torch
     import torch.nn as nn
 
-    from cityclassifiers.training.engine import (
+    from kurome.training.engine import (
         advance_global_step,
         accumulate_scalar_loss,
         average_and_reset_loss_window,
@@ -578,7 +578,7 @@ def test_engine_loss_helpers_basics() -> None:
 
 
 def test_metrics_helpers_basics() -> None:
-    from cityclassifiers.training.metrics import update_last_eval_loss
+    from kurome.training.metrics import update_last_eval_loss
 
     assert update_last_eval_loss(1.0, 0.5) == pytest.approx(0.5)
     assert update_last_eval_loss(1.0, float("nan")) == pytest.approx(1.0)
@@ -586,47 +586,47 @@ def test_metrics_helpers_basics() -> None:
 
 def test_refactor_core_modules_compile() -> None:
     paths = [
-        "cityclassifiers/data/__init__.py",
-        "cityclassifiers/data/contracts.py",
-        "cityclassifiers/data/dataloaders.py",
-        "cityclassifiers/data/datasets/__init__.py",
-        "cityclassifiers/data/datasets/embedding_dataset.py",
-        "cityclassifiers/data/datasets/sequence_dataset.py",
-        "cityclassifiers/data/datasets/image_dataset.py",
-        "cityclassifiers/data/embeddings.py",
-        "cityclassifiers/data/images.py",
-        "cityclassifiers/data/sequences.py",
-        "cityclassifiers/data/transforms.py",
-        "cityclassifiers/config/__init__.py",
-        "cityclassifiers/config/embed_params.py",
-        "cityclassifiers/config/runtime_args.py",
-        "cityclassifiers/config/schema.py",
-        "cityclassifiers/config/loader.py",
-        "cityclassifiers/models/__init__.py",
-        "cityclassifiers/models/backbones/__init__.py",
-        "cityclassifiers/models/backbones/early_extract.py",
-        "cityclassifiers/models/heads/__init__.py",
-        "cityclassifiers/models/heads/predictor.py",
-        "cityclassifiers/models/heads/sequence_head.py",
-        "cityclassifiers/models/heads/hybrid_head.py",
-        "cityclassifiers/models/tasks/__init__.py",
-        "cityclassifiers/models/tasks/losses.py",
-        "cityclassifiers/models/registry.py",
-        "cityclassifiers/models/factory.py",
-        "cityclassifiers/cli/train_embeddings.py",
-        "cityclassifiers/cli/train_features.py",
-        "cityclassifiers/cli/infer.py",
-        "cityclassifiers/inference/pipeline.py",
-        "cityclassifiers/inference/postprocess.py",
-        "cityclassifiers/training/checkpoint.py",
-        "cityclassifiers/training/engine.py",
-        "cityclassifiers/training/loops.py",
-        "cityclassifiers/training/metrics.py",
-        "cityclassifiers/training/state_io.py",
-        "cityclassifiers/training/validation.py",
-        "cityclassifiers/training/wrapper.py",
-        "cityclassifiers/training/optim.py",
-        "cityclassifiers/training/bootstrap.py",
+        "kurome/data/__init__.py",
+        "kurome/data/contracts.py",
+        "kurome/data/dataloaders.py",
+        "kurome/data/datasets/__init__.py",
+        "kurome/data/datasets/embedding_dataset.py",
+        "kurome/data/datasets/sequence_dataset.py",
+        "kurome/data/datasets/image_dataset.py",
+        "kurome/data/embeddings.py",
+        "kurome/data/images.py",
+        "kurome/data/sequences.py",
+        "kurome/data/transforms.py",
+        "kurome/config/__init__.py",
+        "kurome/config/embed_params.py",
+        "kurome/config/runtime_args.py",
+        "kurome/config/schema.py",
+        "kurome/config/loader.py",
+        "kurome/models/__init__.py",
+        "kurome/models/backbones/__init__.py",
+        "kurome/models/backbones/early_extract.py",
+        "kurome/models/heads/__init__.py",
+        "kurome/models/heads/predictor.py",
+        "kurome/models/heads/sequence_head.py",
+        "kurome/models/heads/hybrid_head.py",
+        "kurome/models/tasks/__init__.py",
+        "kurome/models/tasks/losses.py",
+        "kurome/models/registry.py",
+        "kurome/models/factory.py",
+        "kurome/cli/train_embeddings.py",
+        "kurome/cli/train_features.py",
+        "kurome/cli/infer.py",
+        "kurome/inference/pipeline.py",
+        "kurome/inference/postprocess.py",
+        "kurome/training/checkpoint.py",
+        "kurome/training/engine.py",
+        "kurome/training/loops.py",
+        "kurome/training/metrics.py",
+        "kurome/training/state_io.py",
+        "kurome/training/validation.py",
+        "kurome/training/wrapper.py",
+        "kurome/training/optim.py",
+        "kurome/training/bootstrap.py",
     ]
     for rel_path in paths:
         py_compile.compile(str(REPO_ROOT / rel_path), doraise=True)

@@ -6,12 +6,12 @@ import os
 
 import torch
 
-from cityclassifiers.data.dataloaders import (
+from kurome.data.dataloaders import (
     build_training_dataloader,
     build_validation_dataloader,
     log_train_val_loader_summary,
 )
-from cityclassifiers.data.datasets.embedding_dataset import EmbeddingDataset
+from kurome.data.datasets.embedding_dataset import EmbeddingDataset
 
 
 def build_embedding_training_dataloaders(args, image_processor=None):

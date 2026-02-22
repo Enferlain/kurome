@@ -1,4 +1,4 @@
-# CityClassifiers
+# kurome
 
 A flexible and powerful framework for training and deploying high-performance image classifiers and aesthetic predictors. This project utilizes modern vision transformers and advanced training techniques to achieve ~~state-of-the-art~~ results.
 
@@ -24,8 +24,8 @@ This framework is built around a modular architecture that separates feature ext
 -   **Flexible Training Modes:** Train on embeddings, feature sequences, or raw images depending on your needs.
 -   **Advanced Loss Functions:** Built-in support for `FocalLoss` and `GHMC_Loss` to effectively handle class imbalance and focus on hard examples.
 -   **YAML-based Configuration:** A clean and powerful configuration system using YAML files allows you to define every aspect of your training run without changing the code.
--   **Efficient Inference:** Optimized package inference pipeline (`cityclassifiers/inference/pipeline.py`) for fast predictions on single images or entire folders.
--   **Package-First CLI Surface:** Run training, dataset generation, and folder inference from `cityclassifiers/cli/*` (or `launch.py`).
+-   **Efficient Inference:** Optimized package inference pipeline (`kurome/inference/pipeline.py`) for fast predictions on single images or entire folders.
+-   **Package-First CLI Surface:** Run training, dataset generation, and folder inference from `kurome/cli/*` (or `launch.py`).
 -   **Custom Optimizers & Schedulers:** The framework is extensible with a variety of custom optimizers (`AdamW`, `Lion`, `Sophia`, etc.) and learning rate schedulers.
 -   **Weights & Biases Integration:** Log metrics, configurations, and training progress automatically to your W&B dashboard.
 
@@ -34,7 +34,7 @@ This framework is built around a modular architecture that separates feature ext
 ```
 .
 ├── config/                         # YAML configuration files for training runs
-├── cityclassifiers/
+├── kurome/
 │   ├── cli/                        # Package CLIs for training and inference
 │   ├── config/                     # Typed schema + config loading/normalization
 │   ├── data/                       # Dataset modules + dataloader builders
@@ -56,8 +56,8 @@ This framework is built around a modular architecture that separates feature ext
 First, clone the repository and install the required dependencies.
 
 ```bash
-git clone https://github.com/Enferlain/CityClassifiers.git
-cd CityClassifiers
+git clone https://github.com/Enferlain/kurome.git
+cd kurome
 uv venv .venv --python 3.13.5
 uv pip install --python .venv/bin/python --index-url https://download.pytorch.org/whl/cu130 torch==2.10.*
 uv sync --python .venv/bin/python
@@ -95,10 +95,10 @@ For most use cases, you'll pre-compute features from your image dataset. Your im
 
 **Option A: Generate Single-Vector Embeddings**
 
-Use `cityclassifiers.cli.generate_embeddings` to create embeddings. This is fast and uses less disk space.
+Use `kurome.cli.generate_embeddings` to create embeddings. This is fast and uses less disk space.
 
 ```bash
-python -m cityclassifiers.cli.generate_embeddings \
+python -m kurome.cli.generate_embeddings \
   --image_dir path/to/your/images \
   --output_dir_root data \
   --model_name google/siglip-so400m-patch14-384 \
@@ -107,10 +107,10 @@ python -m cityclassifiers.cli.generate_embeddings \
 
 **Option B: Generate Feature Sequences**
 
-Use `cityclassifiers.cli.generate_feature_sequences` for richer features. This can lead to higher accuracy but requires more disk space.
+Use `kurome.cli.generate_feature_sequences` for richer features. This can lead to higher accuracy but requires more disk space.
 
 ```bash
-python -m cityclassifiers.cli.generate_feature_sequences \
+python -m kurome.cli.generate_feature_sequences \
   --image_dir path/to/your/images \
   --output_dir_root data \
   --model_name apple/aimv2-large-patch14-224-way-2b \
@@ -129,8 +129,8 @@ Training is controlled via YAML configuration files located in the `config/` dir
     -   `train`: Training parameters like learning rate, batch size, optimizer, and loss function.
 
 2.  **Start Training (package-first):**
-    -   For feature sequences: `python -m cityclassifiers.cli.train_features --config config/your_config.yaml`
-    -   For embeddings/images: `python -m cityclassifiers.cli.train_embeddings --config config/your_config.yaml`
+    -   For feature sequences: `python -m kurome.cli.train_features --config config/your_config.yaml`
+    -   For embeddings/images: `python -m kurome.cli.train_embeddings --config config/your_config.yaml`
 
     Root wrapper scripts have been removed; use package CLIs only.
 
@@ -142,10 +142,10 @@ Once a model is trained, you can use it for inference.
 
 **Batch Processing a Folder**
 
-Use `cityclassifiers.cli.infer_folder` to classify or score all images in a directory.
+Use `kurome.cli.infer_folder` to classify or score all images in a directory.
 
 ```bash
-python -m cityclassifiers.cli.infer_folder \
+python -m kurome.cli.infer_folder \
   --src path/to/your/images \
   --dst output_folder \
   --model models/your_model_name.safetensors \
@@ -193,4 +193,4 @@ Detects artifacts from JPEG or WebP compression.
 
 ---
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Enferlain/CityClassifiers)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Enferlain/kurome)

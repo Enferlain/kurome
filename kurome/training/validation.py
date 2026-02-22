@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from tqdm import tqdm
 
-from cityclassifiers.models.tasks import FocalLoss, GHMC_Loss
+from kurome.models.tasks import FocalLoss, GHMC_Loss
 
 
 @torch.no_grad()

@@ -21,16 +21,16 @@ if [[ ! -x "$RUFF_BIN" ]]; then
 fi
 
 LINT_TARGETS=(
-  "cityclassifiers/config"
-  "cityclassifiers/data"
-  "cityclassifiers/models"
-  "cityclassifiers/training/state_io.py"
-  "cityclassifiers/training/validation.py"
-  "cityclassifiers/training/wrapper.py"
-  "cityclassifiers/training/checkpoint.py"
-  "cityclassifiers/training/engine.py"
-  "cityclassifiers/training/loops.py"
-  "cityclassifiers/training/metrics.py"
+  "kurome/config"
+  "kurome/data"
+  "kurome/models"
+  "kurome/training/state_io.py"
+  "kurome/training/validation.py"
+  "kurome/training/wrapper.py"
+  "kurome/training/checkpoint.py"
+  "kurome/training/engine.py"
+  "kurome/training/loops.py"
+  "kurome/training/metrics.py"
   "tests"
 )
 
@@ -44,26 +44,26 @@ echo "[quality] wrapper-refs"
 "$PYTHON_BIN" scripts/quality/check_wrapper_references.py
 
 echo "[quality] compile"
-"$PYTHON_BIN" -m compileall -q cityclassifiers tests
+"$PYTHON_BIN" -m compileall -q kurome tests
 
 if [[ "$TYPECHECK_MODE" != "off" ]]; then
   if [[ -x "$TY_BIN" ]]; then
     TY_TARGETS=(
-      "cityclassifiers/config"
-      "cityclassifiers/data"
-      "cityclassifiers/models/factory.py"
-      "cityclassifiers/models/registry.py"
-      "cityclassifiers/models/heads"
-      "cityclassifiers/models/tasks"
-      "cityclassifiers/training/checkpoint.py"
-      "cityclassifiers/training/engine.py"
-      "cityclassifiers/training/loops.py"
-      "cityclassifiers/training/metrics.py"
-      "cityclassifiers/training/state_io.py"
-      "cityclassifiers/training/validation.py"
-      "cityclassifiers/training/wrapper.py"
-      "cityclassifiers/cli/train_embeddings.py"
-      "cityclassifiers/cli/train_features.py"
+      "kurome/config"
+      "kurome/data"
+      "kurome/models/factory.py"
+      "kurome/models/registry.py"
+      "kurome/models/heads"
+      "kurome/models/tasks"
+      "kurome/training/checkpoint.py"
+      "kurome/training/engine.py"
+      "kurome/training/loops.py"
+      "kurome/training/metrics.py"
+      "kurome/training/state_io.py"
+      "kurome/training/validation.py"
+      "kurome/training/wrapper.py"
+      "kurome/cli/train_embeddings.py"
+      "kurome/cli/train_features.py"
     )
     echo "[quality] type-check"
     "$TY_BIN" check "${TY_TARGETS[@]}" --output-format concise

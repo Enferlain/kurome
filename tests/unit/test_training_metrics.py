@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from cityclassifiers.training.metrics import (
+from kurome.training.metrics import (
     append_and_average_validation_loss,
     log_eval_and_average,
     log_eval_loss,

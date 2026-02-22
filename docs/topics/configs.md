@@ -5,8 +5,8 @@ This repo is YAML-first for training configuration.
 ## Entry Point
 
 1. CLI receives `--config`.
-2. `cityclassifiers.config.loader.load_experiment_config(...)` loads + normalizes raw YAML.
-3. The normalized object is `ExperimentConfig` (`cityclassifiers/config/schema.py`).
+2. `kurome.config.loader.load_experiment_config(...)` loads + normalizes raw YAML.
+3. The normalized object is `ExperimentConfig` (`kurome/config/schema.py`).
 
 ## Required Shape
 
@@ -35,11 +35,11 @@ Top-level sections expected in practice:
 
 1. Embeddings/images CLI:
 ```bash
-python -m cityclassifiers.cli.train_embeddings --config config/your_config.yaml
+python -m kurome.cli.train_embeddings --config config/your_config.yaml
 ```
 2. Features CLI:
 ```bash
-python -m cityclassifiers.cli.train_features --config config/your_config.yaml
+python -m kurome.cli.train_features --config config/your_config.yaml
 ```
 
 ## Related Docs

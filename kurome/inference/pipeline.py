@@ -17,17 +17,17 @@ import math
 # --- Import Models ---
 import dinov3_7b_quant_bnb # <<< ADDED: Import for DINOv3 BnB loading >>>
 try:
-    from cityclassifiers.models.heads import (
+    from kurome.models.heads import (
         HeadModel,  # Sequence head (unused by these pipelines directly)
         HybridHeadModel,
         PredictorModel,
     )
-    from cityclassifiers.inference.postprocess import (
+    from kurome.inference.postprocess import (
         format_classifier_prediction,
         format_multi_model_prediction_raw,
         format_sequence_prediction,
     )
-    from cityclassifiers.config.embed_params import get_embed_params
+    from kurome.config.embed_params import get_embed_params
 except ImportError as e:
     print(f"Error importing model classes or get_embed_params: {e}")
     raise

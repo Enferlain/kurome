@@ -14,9 +14,9 @@ A single logical checkpoint consists of:
 
 ## Runtime Modules
 
-1. High-level checkpoint hooks: `cityclassifiers/training/checkpoint.py`
-2. Low-level load/save helpers: `cityclassifiers/training/state_io.py`
-3. Wrapper save orchestration: `cityclassifiers/training/wrapper.py`
+1. High-level checkpoint hooks: `kurome/training/checkpoint.py`
+2. Low-level load/save helpers: `kurome/training/state_io.py`
+3. Wrapper save orchestration: `kurome/training/wrapper.py`
 
 ## Resume Flow
 

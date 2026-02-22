@@ -74,7 +74,7 @@ def main() -> int:
     for rel, lineno, line in hits:
         print(f"  - {rel}:{lineno}: {line}")
     print(
-        "move usage to package entrypoints (python -m cityclassifiers.cli.*), "
+        "move usage to package entrypoints (python -m kurome.cli.*), "
         "or update wrapper_reference_allowlist.txt if intentionally historical."
     )
     return 1

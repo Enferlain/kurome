@@ -11,7 +11,7 @@ import traceback # Keep traceback
 from transformers import AutoProcessor # <<< Added AutoProcessor import
 
 # --- Local Imports ---
-from cityclassifiers.training.bootstrap import (
+from kurome.training.bootstrap import (
     apply_sageattention_patch,
     configure_torch_runtime,
     load_checkpoint_state,
@@ -19,21 +19,21 @@ from cityclassifiers.training.bootstrap import (
     setup_precision,
     setup_wandb,
 )
-from cityclassifiers.training.checkpoint import load_checkpoint as load_checkpoint_common
-from cityclassifiers.training.loops import run_feature_sequence_training_loop
-from cityclassifiers.training.optim import setup_optimizer_scheduler as setup_optimizer_scheduler_common
-from cityclassifiers.config.loader import load_experiment_config
-from cityclassifiers.config.schema import ExperimentConfig
-from cityclassifiers.config.runtime_args import write_config
-from cityclassifiers.data.sequences import build_feature_sequence_dataloaders
-from cityclassifiers.models.factory import build_criterion, build_model, resolve_num_classes
-from cityclassifiers.training.state_io import (
+from kurome.training.checkpoint import load_checkpoint as load_checkpoint_common
+from kurome.training.loops import run_feature_sequence_training_loop
+from kurome.training.optim import setup_optimizer_scheduler as setup_optimizer_scheduler_common
+from kurome.config.loader import load_experiment_config
+from kurome.config.schema import ExperimentConfig
+from kurome.config.runtime_args import write_config
+from kurome.data.sequences import build_feature_sequence_dataloaders
+from kurome.models.factory import build_criterion, build_model, resolve_num_classes
+from kurome.training.state_io import (
     load_optimizer_state,
     load_scaler_state,
     load_scheduler_state,
 )
-from cityclassifiers.training.validation import run_validation_sequences
-from cityclassifiers.training.wrapper import ModelWrapper, SAVE_FOLDER
+from kurome.training.validation import run_validation_sequences
+from kurome.training.wrapper import ModelWrapper, SAVE_FOLDER
 
 
 def _load_optional_wandb() -> Any | None:
@@ -194,7 +194,7 @@ def load_checkpoint(args, model, optimizer, scheduler, scaler):
 # ================================================
 #        Main Training Loop (for Feature Sequences)
 # ================================================
-# Version 1.3.0: Delegates training loop implementation to cityclassifiers.training.loops
+# Version 1.3.0: Delegates training loop implementation to kurome.training.loops
 def train_loop(args, model, criterion, optimizer, scheduler, scaler,
                train_loader, val_loader, wrapper, start_epoch, initial_global_step,
                enabled_amp, amp_dtype, is_schedule_free):

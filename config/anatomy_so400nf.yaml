@@ -60,7 +60,7 @@ train:
 
   # -- Optimizer Hyperparameters --
   # Only specify args here IF you want to OVERRIDE the optimizer's own internal defaults.
-  # train.py will dynamically pass any args here matching the chosen optimizer's __init__ signature.
+  # The training CLI will dynamically pass any args here matching the chosen optimizer's __init__ signature.
   # Example overrides (check optimizer's code for valid args and defaults):
   betas: [0.9, 0.95]      # List/tuple of 2 floats
   eps: 1e-8                # Float

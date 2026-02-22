@@ -1,0 +1,87 @@
+# Configuration for training on pre-computed DINOv3 7B 8-bit BnB embeddings
+
+# --- Model Identification ---
+# (Used for naming output files/runs)
+model:
+  base: "AnatomyFlaws"
+  rev: "v15.5_dinov3_7b_bnb_fl" # New revision for DINOv3 7B BnB
+  arch: class                      # Still a classification task
+  base_vision_model: "dinov3-vit7b16-pretrain-lvd1689m-8bit" # DINOv3 8-bit BnB model name
+  embed_ver: "fb_dinov3_vit7b16_pretrain_lvd1689m_8bit_DINOv3_8bit_BnB" # Expected output dir from generate_embeddings.py
+# --- Data Configuration ---
+data:
+  mode: embeddings                   # Crucial: Set mode to 'embeddings'
+  data_root: ./data                # Root location for data folders
+  # Name of the subfolder containing the generated .npy embeddings
+  feature_dir_name: "fb_dinov3_vit7b16_pretrain_lvd1689m_8bit_DINOv3_8bit_BnB"
+  # Validation split count (applied to embedding file list)
+  val_split_count: 241 # 480
+
+# --- HybridHeadModel Architecture Parameters (for embeddings) ---
+predictor_params:
+  features: 4096           # Input embedding size for DINOv3-7B (from model config)
+  hidden_dim: 1536
+  num_classes: 2           # Output neurons. Set by training script based on 'arch' and 'labels'.
+  use_attention: true      # Use the initial MultiheadAttention layer? (true/false)
+  num_attn_heads: 32       # Number of attention heads (from model config). Must be divisor of features dim.
+  attn_dropout: 0.218     # Dropout rate for attention layer (if use_attention=true). [0.0 - 1.0]
+  num_res_blocks: 4        # Number of ResBlocks in the MLP head. [0, 1, 2, ...]
+  dropout_rate: 0.218     # Dropout rate in the MLP 'down' block. [0.0 - 1.0]
+  output_mode: linear      # Options: 'linear', 'sigmoid', 'softmax', 'tanh_scaled'
+
+# --- Training Parameters ---
+train:
+  # --- Training Duration ---
+  max_train_steps: 3500            # Example: 2k steps (adjust as needed)
+  # max_train_epochs: 80           # Can alternatively specify epochs
+
+  # --- Core Settings ---
+  lr: 1e-4                         # Learning rate
+  batch: 64                        # Batch size
+  gradient_accumulation_steps: 1   # Accumulate over 1 micro-batch
+  precision: "bf16"                # Use bf16 mixed precision for DINOv3 8-bit BnB
+
+  # --- Loss Function ---
+  loss_function: "focal"           # Options: 'crossentropy', 'focal', 'bce', 'l1', 'mse', 'nll', 'ghm'.
+  focal_loss_gamma: 2.0
+
+  # --- Optimizer ---
+  optimizer: "adabelief"
+  # -- Optimizer Hyperparameters --
+  betas: [0.9, 0.999]
+  eps: 1e-8
+  weight_decay: 1e-3
+  rectify: true
+  weight_decouple: true
+
+  gamma: 0.005
+  r_sf: 0.0
+  wlpow_sf: 2.0
+  state_precision: parameter
+  adaptive_clip: 1.0
+  adaptive_clip_eps: 1e-3
+
+  # --- Scheduler ---
+  scheduler_name: "RexAnnealingWarmRestarts"
+  # -- Scheduler Arguments --
+  scheduler_gamma: 0.95
+  scheduler_cycle_multiplier: 1.0
+  scheduler_first_cycle_max_steps: 350
+  scheduler_min_lr: 1e-7
+  scheduler_warmup_steps: 50
+
+  # --- Data & Other ---
+  seed: 218
+  num_workers: 0
+  nsave: 100
+  log_every_n: 10
+  validate_every_n: 34
+  save_full_model: false
+
+# --- Labels ---
+labels:
+ '0': { name: "Bad Anatomy", loss: 1.0 }
+ '1': { name: "Good Anatomy", loss: 1.0 }
+
+# --- Logging ---
+wandb_project: "lumi-classifiers"

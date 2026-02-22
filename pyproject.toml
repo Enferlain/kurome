@@ -3,7 +3,7 @@ requires = ["hatchling>=1.25.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "cityclassifiers"
+name = "kurome"
 version = "0.1.0"
 description = "Training and inference utilities for image classifiers and aesthetic predictors."
 readme = "README.md"

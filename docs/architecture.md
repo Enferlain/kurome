@@ -1,4 +1,4 @@
-# CityClassifiers Architecture (Target)
+# kurome Architecture (Target)
 
 ## 1. Objective
 Define a modular architecture that preserves current training/inference behavior while making the codebase easier to maintain and extend.
@@ -16,7 +16,7 @@ For action-oriented topic docs, see `docs/README.md`.
 
 ## 3. High-Level Module Layout
 ```text
-cityclassifiers/
+kurome/
   cli/           # user-facing entrypoints
   config/        # schema + loading + normalization
   data/          # datasets, collators, transforms, loaders
@@ -28,7 +28,7 @@ cityclassifiers/
 
 ## 4. Module Responsibilities
 
-### 4.1 `cityclassifiers.cli`
+### 4.1 `kurome.cli`
 - Parse args and select mode.
 - Load/validate config.
 - Build runtime components through factory interfaces.
@@ -38,7 +38,7 @@ Must not:
 - Contain model-specific branching logic.
 - Implement core training loop internals.
 
-### 4.2 `cityclassifiers.config`
+### 4.2 `kurome.config`
 - Read YAML config files.
 - Produce a normalized typed config object.
 - Validate required fields and cross-field constraints.
@@ -47,7 +47,7 @@ Must provide:
 - clear errors for invalid config
 - mode-specific normalization (embeddings/features/images)
 
-### 4.3 `cityclassifiers.data`
+### 4.3 `kurome.data`
 - Dataset definitions and collation.
 - Dataloader construction.
 - Preprocessing transforms.
@@ -55,7 +55,7 @@ Must provide:
 Must provide:
 - stable batch contracts consumed by training/inference modules
 
-### 4.4 `cityclassifiers.models`
+### 4.4 `kurome.models`
 - Registry-based model support.
 - Adapters for backbones, heads, and task behavior.
 - Factory that builds model + criterion + task adapter from config.
@@ -63,7 +63,7 @@ Must provide:
 Must provide:
 - extension path: adapter file + registry entry
 
-### 4.5 `cityclassifiers.training`
+### 4.5 `kurome.training`
 - Runtime bootstrap (device, precision, optional patches).
 - Optimizer/scheduler creation.
 - Checkpoint load/save and resume state.
@@ -73,7 +73,7 @@ Must provide:
 - mode-agnostic loop mechanics
 - deterministic checkpoint/resume semantics
 
-### 4.6 `cityclassifiers.inference`
+### 4.6 `kurome.inference`
 - Reusable inference pipelines.
 - Model loading + input preprocessing + output postprocessing.
 
@@ -130,12 +130,12 @@ Resume logic must load available files safely and emit clear warnings for missin
 ## 7. Current State vs Target
 Current repo is script-heavy with significant duplication in training and setup code.
 Initial migration already started by introducing shared bootstrap helpers in:
-- `cityclassifiers/training/bootstrap.py`
+- `kurome/training/bootstrap.py`
 
 Remaining work is to continue reducing legacy root compatibility modules.
 
 ## 8. Migration Policy
-1. Keep package CLIs (`cityclassifiers/cli/*`) as canonical entrypoints.
+1. Keep package CLIs (`kurome/cli/*`) as canonical entrypoints.
 2. Move one concern at a time (bootstrap, config, model factory, data, engine).
 3. Run smoke checks after each slice.
 4. Avoid behavior changes unless explicitly planned and documented.
@@ -149,8 +149,8 @@ Minimum checks after each migration slice:
 
 ## 10. Extension Workflow (Target)
 To add a new model family:
-1. Add backbone/head/task adapter module(s) under `cityclassifiers/models/`.
-2. Register adapter IDs in `cityclassifiers/models/registry.py`.
+1. Add backbone/head/task adapter module(s) under `kurome/models/`.
+2. Register adapter IDs in `kurome/models/registry.py`.
 3. Add config entry using registered IDs.
 4. Run unit test(s) for registry resolution and one smoke run.
 

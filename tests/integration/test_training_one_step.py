@@ -6,7 +6,7 @@ import pytest
 import torch
 import torch.nn as nn
 
-from cityclassifiers.training.loops import (
+from kurome.training.loops import (
     run_embedding_training_loop,
     run_feature_sequence_training_loop,
 )

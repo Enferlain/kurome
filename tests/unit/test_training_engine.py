@@ -5,7 +5,7 @@ import math
 import pytest
 import torch
 
-from cityclassifiers.training.engine import (
+from kurome.training.engine import (
     mean_tensor_losses,
     maybe_step_scheduler,
     normalize_embedding_batch_data,

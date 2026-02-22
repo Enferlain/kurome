@@ -154,7 +154,7 @@ def load_raw_config(config_path: str) -> dict[str, Any]:
 
 def parse_and_load_args(config_path: str):
     """Compatibility wrapper around the existing legacy parser."""
-    from cityclassifiers.config.runtime_args import parse_and_load_args as legacy_parse_and_load_args
+    from kurome.config.runtime_args import parse_and_load_args as legacy_parse_and_load_args
 
     raw = load_raw_config(config_path=config_path)
     prepared = _build_legacy_compatible_raw(raw, config_path=config_path)

@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 # --- Local Imports ---
-from cityclassifiers.training.bootstrap import (
+from kurome.training.bootstrap import (
     apply_sageattention_patch,
     configure_torch_runtime,
     load_checkpoint_state,
@@ -19,29 +19,29 @@ from cityclassifiers.training.bootstrap import (
     setup_precision,
     setup_wandb,
 )
-from cityclassifiers.training.checkpoint import load_checkpoint as load_checkpoint_common
-from cityclassifiers.training.loops import run_embedding_training_loop
-from cityclassifiers.training.optim import setup_optimizer_scheduler as setup_optimizer_scheduler_common
-from cityclassifiers.config.loader import load_experiment_config
-from cityclassifiers.config.schema import ExperimentConfig
-from cityclassifiers.data.embeddings import build_embedding_training_dataloaders
-from cityclassifiers.data.images import build_image_training_dataloaders
-from cityclassifiers.data.transforms import load_image_processor
-from cityclassifiers.models.factory import (
+from kurome.training.checkpoint import load_checkpoint as load_checkpoint_common
+from kurome.training.loops import run_embedding_training_loop
+from kurome.training.optim import setup_optimizer_scheduler as setup_optimizer_scheduler_common
+from kurome.config.loader import load_experiment_config
+from kurome.config.schema import ExperimentConfig
+from kurome.data.embeddings import build_embedding_training_dataloaders
+from kurome.data.images import build_image_training_dataloaders
+from kurome.data.transforms import load_image_processor
+from kurome.models.factory import (
     build_criterion,
     build_model,
     build_model_with_filtered_kwargs,
     resolve_num_classes,
 )
-from cityclassifiers.config.embed_params import get_embed_params
-from cityclassifiers.config.runtime_args import write_config
-from cityclassifiers.training.state_io import (
+from kurome.config.embed_params import get_embed_params
+from kurome.config.runtime_args import write_config
+from kurome.training.state_io import (
     load_optimizer_state,
     load_scaler_state,
     load_scheduler_state,
 )
-from cityclassifiers.training.validation import run_validation_embeddings
-from cityclassifiers.training.wrapper import ModelWrapper
+from kurome.training.validation import run_validation_embeddings
+from kurome.training.wrapper import ModelWrapper
 
 
 def _load_optional_wandb() -> Any | None:
@@ -288,7 +288,7 @@ def load_checkpoint(args, model, optimizer, scheduler, scaler):
 # ================================================
 #        Main Training Loop (Epoch-Based)
 # ================================================
-# Version 3.6.0: Delegates training loop implementation to cityclassifiers.training.loops
+# Version 3.6.0: Delegates training loop implementation to kurome.training.loops
 def train_loop(args, model, criterion, optimizer, scheduler, scaler,
                train_loader, val_loader, wrapper, start_epoch, initial_global_step,
                enabled_amp, amp_dtype, is_schedule_free):

@@ -7,7 +7,7 @@ other/
 images/
 ratings*
 models/
-!cityclassifiers/models
+!kurome/models
 external/
 preprocess_*
 wandb/

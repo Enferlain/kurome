@@ -10,11 +10,11 @@ from typing import Any
 import torch
 from tqdm import tqdm
 
-from cityclassifiers.training.checkpoint import (
+from kurome.training.checkpoint import (
     maybe_save_periodic_checkpoint,
     update_best_and_maybe_save,
 )
-from cityclassifiers.training.engine import (
+from kurome.training.engine import (
     advance_global_step,
     accumulate_scalar_loss,
     average_and_reset_loss_window,
@@ -32,7 +32,7 @@ from cityclassifiers.training.engine import (
     should_run_interval,
     update_progress_postfix,
 )
-from cityclassifiers.training.metrics import (
+from kurome.training.metrics import (
     append_and_average_validation_loss,
     log_eval_and_average,
     log_eval_loss,

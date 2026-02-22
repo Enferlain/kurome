@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from cityclassifiers.models.tasks import FocalLoss, GHMC_Loss
+from kurome.models.tasks import FocalLoss, GHMC_Loss
 
 
 def ensure_training_mode(model: Any, optimizer: Any) -> None:

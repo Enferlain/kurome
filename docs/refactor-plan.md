@@ -1,4 +1,4 @@
-# CityClassifiers Refactor Plan
+# kurome Refactor Plan
 
 ## Purpose
 This plan defines the target structure and an incremental migration path to move the repo from flat, oversized scripts to a modular package with clearer ownership, easier model support, and safer long-term maintenance.
@@ -12,11 +12,11 @@ This plan defines the target structure and an incremental migration path to move
 
 ## Target Repository Shape
 ```text
-cityclassifiers/
+kurome/
   pyproject.toml
   README.md
   config/
-  cityclassifiers/
+  kurome/
     __init__.py
     cli/
       train_embeddings.py
@@ -80,9 +80,9 @@ cityclassifiers/
 - Keep root scripts as wrappers.
 
 ### Deliverables
-- `cityclassifiers/cli/train_embeddings.py`
-- `cityclassifiers/cli/train_features.py`
-- `cityclassifiers/cli/infer.py`
+- `kurome/cli/train_embeddings.py`
+- `kurome/cli/train_features.py`
+- `kurome/cli/infer.py`
 - Root wrappers:
   - `train.py`
   - `train_features.py`
@@ -98,9 +98,9 @@ cityclassifiers/
 - Fail fast on invalid/missing config.
 
 ### Deliverables
-- `cityclassifiers/config/schema.py`:
+- `kurome/config/schema.py`:
   - typed config models
-- `cityclassifiers/config/loader.py`:
+- `kurome/config/loader.py`:
   - YAML parse + defaults + normalization + validation
 - Replace ad-hoc `getattr` defaulting in core paths.
 
@@ -114,13 +114,13 @@ cityclassifiers/
 - Make model support extensible by registration.
 
 ### Deliverables
-- `cityclassifiers/models/registry.py`
+- `kurome/models/registry.py`
   - backbone/head/task registries
-- `cityclassifiers/models/factory.py`
+- `kurome/models/factory.py`
   - construct model + criterion + task adapter
-- `cityclassifiers/models/backbones/*`
-- `cityclassifiers/models/heads/*`
-- `cityclassifiers/models/tasks/*`
+- `kurome/models/backbones/*`
+- `kurome/models/heads/*`
+- `kurome/models/tasks/*`
 
 ### Done Criteria
 - Existing supported setups are registry-driven.
@@ -134,10 +134,10 @@ cityclassifiers/
 - Isolate mode-specific preprocessing.
 
 ### Deliverables
-- `cityclassifiers/data/embeddings.py`
-- `cityclassifiers/data/sequences.py`
-- `cityclassifiers/data/images.py`
-- `cityclassifiers/data/transforms.py`
+- `kurome/data/embeddings.py`
+- `kurome/data/sequences.py`
+- `kurome/data/images.py`
+- `kurome/data/transforms.py`
 - common dataloader builder util
 
 ### Done Criteria
@@ -150,10 +150,10 @@ cityclassifiers/
 - Reuse checkpoint, optimizer, and logging logic.
 
 ### Deliverables
-- `cityclassifiers/training/engine.py`
-- `cityclassifiers/training/optim.py`
-- `cityclassifiers/training/checkpoint.py`
-- `cityclassifiers/training/metrics.py`
+- `kurome/training/engine.py`
+- `kurome/training/optim.py`
+- `kurome/training/checkpoint.py`
+- `kurome/training/metrics.py`
 - callback hooks:
   - validation
   - logging
@@ -169,9 +169,9 @@ cityclassifiers/
 - Isolate IO from inference core logic.
 
 ### Deliverables
-- `cityclassifiers/inference/pipeline.py`
-- `cityclassifiers/inference/postprocess.py`
-- CLI wrapper in `cityclassifiers/cli/infer.py`
+- `kurome/inference/pipeline.py`
+- `kurome/inference/postprocess.py`
+- CLI wrapper in `kurome/cli/infer.py`
 
 ### Done Criteria
 - Inference logic is reusable and testable.
@@ -217,7 +217,7 @@ cityclassifiers/
 ## Phase 9 - Legacy Root Module Elimination
 ### Goals
 - Remove remaining runtime dependencies on root implementation modules.
-- Make `cityclassifiers/*` the source of truth for models, losses, data loaders/datasets, and runtime helpers.
+- Make `kurome/*` the source of truth for models, losses, data loaders/datasets, and runtime helpers.
 
 ### Scope (current refactor targets)
 - Models/losses:
@@ -236,20 +236,20 @@ cityclassifiers/
 ### Migration Process (must follow in order)
 1. Slice A - Models and losses:
    - Move full implementations into:
-     - `cityclassifiers/models/heads/*`
-     - `cityclassifiers/models/backbones/*`
-     - `cityclassifiers/models/tasks/losses.py`
+     - `kurome/models/heads/*`
+     - `kurome/models/backbones/*`
+     - `kurome/models/tasks/losses.py`
    - Remove adapter-style root imports (for example `from model import PredictorModel`).
    - Update all package imports to target package-local implementations only.
 2. Slice B - Dataset implementations:
-   - Move dataset classes/collate functions into package data modules (or `cityclassifiers/data/datasets/*` if split).
-   - Update `cityclassifiers/data/embeddings.py`, `cityclassifiers/data/sequences.py`, `cityclassifiers/data/images.py` to import package-local dataset code only.
+   - Move dataset classes/collate functions into package data modules (or `kurome/data/datasets/*` if split).
+   - Update `kurome/data/embeddings.py`, `kurome/data/sequences.py`, `kurome/data/images.py` to import package-local dataset code only.
 3. Slice C - `utils.py` decomposition:
    - Split config parsing, checkpoint helpers, validation helpers, and wrapper glue into:
-     - `cityclassifiers/config/*`
-     - `cityclassifiers/training/*`
-     - `cityclassifiers/inference/*`
-     - `cityclassifiers/utils/*` (only true utilities)
+     - `kurome/config/*`
+     - `kurome/training/*`
+     - `kurome/inference/*`
+     - `kurome/utils/*` (only true utilities)
    - Remove package runtime imports from root `utils.py`.
 4. Slice D - Root cleanup:
    - Delete migrated root modules only after import graph confirms no package/runtime references.
@@ -297,13 +297,13 @@ cityclassifiers/
 2. Config schema/loader now includes stricter normalization with typed mode-specific sections used by training setup paths.
 3. Model registry/factory now drives both training CLIs.
 4. Model package adapters now expose explicit module paths under:
-   - `cityclassifiers/models/backbones/*`
-   - `cityclassifiers/models/heads/*`
-   - `cityclassifiers/models/tasks/*`
-5. Data loader setup is extracted to `cityclassifiers/data/*` for embeddings, sequences, and images.
-6. Data batch contracts are now documented centrally in `cityclassifiers/data/contracts.py`.
-7. End-to-end processor loading is now isolated in `cityclassifiers/data/transforms.py`.
-8. Data adapters now share reusable train/validation dataloader build + summary helpers in `cityclassifiers/data/dataloaders.py`.
+   - `kurome/models/backbones/*`
+   - `kurome/models/heads/*`
+   - `kurome/models/tasks/*`
+5. Data loader setup is extracted to `kurome/data/*` for embeddings, sequences, and images.
+6. Data batch contracts are now documented centrally in `kurome/data/contracts.py`.
+7. End-to-end processor loading is now isolated in `kurome/data/transforms.py`.
+8. Data adapters now share reusable train/validation dataloader build + summary helpers in `kurome/data/dataloaders.py`.
 9. Shared training helpers now cover:
    - train-mode + scheduler + progress postfix
    - optimizer/scheduler setup
@@ -314,8 +314,8 @@ cityclassifiers/
    - global-step/progress/wrapper propagation
    - step-limit checks and periodic interval gating
    - validation loss-state updates and post-validation mode restoration
-10. Training-loop implementations live in `cityclassifiers/training/loops.py`, and CLI training loops now delegate to package code.
-11. Inference postprocessing is now isolated in `cityclassifiers/inference/postprocess.py`.
+10. Training-loop implementations live in `kurome/training/loops.py`, and CLI training loops now delegate to package code.
+11. Inference postprocessing is now isolated in `kurome/inference/postprocess.py`.
 12. Added focused unit tests for `training.engine`, `training.metrics`, and `training.checkpoint` in `tests/unit/`.
 13. Added minimal synthetic integration tests that execute real one-step forward/backward optimizer updates for:
     - embedding loop
@@ -336,22 +336,22 @@ cityclassifiers/
     - `scripts/quality/wrapper_reference_allowlist.txt`
 18. Refactor smoke suite is active and passing.
 19. Phase 9 Slice A started:
-    - `cityclassifiers/models/tasks/losses.py` now contains native loss implementations (no root `losses.py` adapter import)
-    - `cityclassifiers/models/heads/predictor.py` now contains native PredictorModel implementation (no root `model.py` adapter import)
+    - `kurome/models/tasks/losses.py` now contains native loss implementations (no root `losses.py` adapter import)
+    - `kurome/models/heads/predictor.py` now contains native PredictorModel implementation (no root `model.py` adapter import)
     - root-model/loss adapters were fully replaced with package-local imports
 20. Phase 9 Slice A continued:
-    - `cityclassifiers/models/heads/sequence_head.py` now contains native `HeadModel` implementation (no root `head_model.py` adapter import)
-    - `cityclassifiers/models/heads/hybrid_head.py` now contains native `HybridHeadModel` implementation (no root `hybrid_model.py` adapter import)
-    - `cityclassifiers/models/backbones/early_extract.py` now contains native `EarlyExtractAnatomyModel` implementation (no root `model_early_extract.py` adapter import)
+    - `kurome/models/heads/sequence_head.py` now contains native `HeadModel` implementation (no root `head_model.py` adapter import)
+    - `kurome/models/heads/hybrid_head.py` now contains native `HybridHeadModel` implementation (no root `hybrid_model.py` adapter import)
+    - `kurome/models/backbones/early_extract.py` now contains native `EarlyExtractAnatomyModel` implementation (no root `model_early_extract.py` adapter import)
 21. Phase 9 Slice B started:
     - dataset implementations moved into package-native modules:
-      - `cityclassifiers/data/datasets/embedding_dataset.py`
-      - `cityclassifiers/data/datasets/sequence_dataset.py`
-      - `cityclassifiers/data/datasets/image_dataset.py`
+      - `kurome/data/datasets/embedding_dataset.py`
+      - `kurome/data/datasets/sequence_dataset.py`
+      - `kurome/data/datasets/image_dataset.py`
     - data adapters now import package-local dataset modules only:
-      - `cityclassifiers/data/embeddings.py`
-      - `cityclassifiers/data/sequences.py`
-      - `cityclassifiers/data/images.py`
+      - `kurome/data/embeddings.py`
+      - `kurome/data/sequences.py`
+      - `kurome/data/images.py`
     - root legacy modules removed:
       - `head_model.py`
       - `hybrid_model.py`
@@ -361,12 +361,12 @@ cityclassifiers/
       - `image_dataset.py`
 22. Phase 9 Slice C started:
     - package runtime helpers extracted from root `utils.py` into package modules:
-      - `cityclassifiers/config/embed_params.py`
-      - `cityclassifiers/config/runtime_args.py`
-      - `cityclassifiers/training/wrapper.py`
-      - `cityclassifiers/training/state_io.py`
-      - `cityclassifiers/training/validation.py`
-    - package runtime imports now route through package modules only (no `from utils import ...` in `cityclassifiers/*`)
+      - `kurome/config/embed_params.py`
+      - `kurome/config/runtime_args.py`
+      - `kurome/training/wrapper.py`
+      - `kurome/training/state_io.py`
+      - `kurome/training/validation.py`
+    - package runtime imports now route through package modules only (no `from utils import ...` in `kurome/*`)
     - quality/smoke checks updated to guard this import boundary
 23. Phase 9 Slice C/D completed:
     - removed remaining root legacy implementation modules:

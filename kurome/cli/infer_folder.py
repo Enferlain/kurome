@@ -92,7 +92,7 @@ def _infer_config_path(model_path: str) -> str:
 
 def _build_pipeline(args: argparse.Namespace):
     import torch
-    from cityclassifiers.inference.pipeline import (
+    from kurome.inference.pipeline import (
         CityAestheticsPipeline,
         CityClassifierPipeline,
         HeadSequencePipeline,

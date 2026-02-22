@@ -12,39 +12,39 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ### Added
 
 - Package-level CLIs for training and inference:
-  - `cityclassifiers/cli/train_embeddings.py`
-  - `cityclassifiers/cli/train_features.py`
-  - `cityclassifiers/cli/infer.py`
+  - `kurome/cli/train_embeddings.py`
+  - `kurome//cli/train_features.py`
+  - `kurome//cli/infer.py`
 - Package-level config layer with typed schema and loader:
-  - `cityclassifiers/config/schema.py`
-  - `cityclassifiers/config/loader.py`
+  - `kurome//config/schema.py`
+  - `kurome//config/loader.py`
 - Package-level model registry/factory:
-  - `cityclassifiers/models/registry.py`
-  - `cityclassifiers/models/factory.py`
+  - `kurome//models/registry.py`
+  - `kurome//models/factory.py`
 - Package-level model adapter modules:
-  - `cityclassifiers/models/backbones/*`
-  - `cityclassifiers/models/heads/*`
-  - `cityclassifiers/models/tasks/*`
+  - `kurome//models/backbones/*`
+  - `kurome//models/heads/*`
+  - `kurome/models/tasks/*`
 - Package-level data-loading layer:
-  - `cityclassifiers/data/__init__.py`
-  - `cityclassifiers/data/contracts.py`
-  - `cityclassifiers/data/dataloaders.py`
-  - `cityclassifiers/data/embeddings.py`
-  - `cityclassifiers/data/images.py`
-  - `cityclassifiers/data/sequences.py`
-  - `cityclassifiers/data/transforms.py`
+  - `kurome/data/__init__.py`
+  - `kurome/data/contracts.py`
+  - `kurome/data/dataloaders.py`
+  - `kurome/data/embeddings.py`
+  - `kurome/data/images.py`
+  - `kurome/data/sequences.py`
+  - `kurome/data/transforms.py`
 - Package-level training-loop helpers:
-  - `cityclassifiers/training/engine.py`
+  - `kurome/training/engine.py`
 - Package-level training setup helpers:
-  - `cityclassifiers/training/optim.py`
-  - `cityclassifiers/training/checkpoint.py`
+  - `kurome/training/optim.py`
+  - `kurome/training/checkpoint.py`
 - Package-level metric logging helpers:
-  - `cityclassifiers/training/metrics.py`
+  - `kurome/training/metrics.py`
 - Package-level training loop implementations:
-  - `cityclassifiers/training/loops.py`
+  - `kurome/training/loops.py`
 - Package-level inference module:
-  - `cityclassifiers/inference/pipeline.py`
-  - `cityclassifiers/inference/postprocess.py`
+  - `kurome/inference/pipeline.py`
+  - `kurome/inference/postprocess.py`
 - Refactor docs:
   - `docs/refactor-plan.md`
   - `docs/architecture.md`
@@ -82,41 +82,41 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 ### Changed
 
-- Root entrypoint usage has fully moved to package CLIs (`python -m cityclassifiers.cli.*`) and package inference modules.
+- Root entrypoint usage has fully moved to package CLIs (`python -m kurome.cli.*`) and package inference modules.
 - Training CLIs now load a normalized experiment config via `load_experiment_config(...)`.
 - `train_features` and `train_embeddings` now use registry/factory helpers for loss and model construction.
 - Embedding model selection can now be configured with `model.model_id` (defaults to `hybrid_head_model` if unspecified).
-- Training CLI dataloader setup now delegates to `cityclassifiers.data` modules.
-- Training CLIs now share train-mode/scheduler/postfix loop helpers via `cityclassifiers.training.engine`.
-- Training CLIs now share optimizer/scheduler construction and checkpoint load wrappers via `cityclassifiers.training.*`.
-- Validation metric logging and periodic/best checkpoint save flow now routes through shared `cityclassifiers.training` helpers.
-- Per-step prediction/loss shaping now routes through shared helpers in `cityclassifiers.training.engine`.
-- Training loops now route batch/target preparation through shared `cityclassifiers.training.engine` helpers.
-- Optimizer-step execution and loss-window bookkeeping now route through shared `cityclassifiers.training.engine` helpers.
-- Training loops now route global-step/progress/wrapper updates through shared `cityclassifiers.training.engine.advance_global_step`.
-- Training loops now route step-limit checks and periodic log/validation interval gating through shared `cityclassifiers.training.engine` helpers.
-- Validation post-run train-mode restoration and last-eval-loss tracking now route through shared `cityclassifiers.training` helpers.
-- Training CLIs now delegate `train_loop(...)` execution to `cityclassifiers.training.loops`.
+- Training CLI dataloader setup now delegates to `kurome.data` modules.
+- Training CLIs now share train-mode/scheduler/postfix loop helpers via `kurome.training.engine`.
+- Training CLIs now share optimizer/scheduler construction and checkpoint load wrappers via `kurome.training.*`.
+- Validation metric logging and periodic/best checkpoint save flow now routes through shared `kurome.training` helpers.
+- Per-step prediction/loss shaping now routes through shared helpers in `kurome.training.engine`.
+- Training loops now route batch/target preparation through shared `kurome.training.engine` helpers.
+- Optimizer-step execution and loss-window bookkeeping now route through shared `kurome.training.engine` helpers.
+- Training loops now route global-step/progress/wrapper updates through shared `kurome.training.engine.advance_global_step`.
+- Training loops now route step-limit checks and periodic log/validation interval gating through shared `kurome.training.engine` helpers.
+- Validation post-run train-mode restoration and last-eval-loss tracking now route through shared `kurome.training` helpers.
+- Training CLIs now delegate `train_loop(...)` execution to `kurome.training.loops`.
 - Model and loss imports now route through package adapter modules instead of root-level model/loss imports in registry/factory/engine paths.
-- `cityclassifiers/models/heads/sequence_head.py`, `cityclassifiers/models/heads/hybrid_head.py`, and `cityclassifiers/models/backbones/early_extract.py` now contain native implementations instead of root-import adapters.
-- Dataset implementations now live in `cityclassifiers/data/datasets/*`, and package data adapters import those package-local modules.
+- `kurome/models/heads/sequence_head.py`, `kurome/models/heads/hybrid_head.py`, and `kurome/models/backbones/early_extract.py` now contain native implementations instead of root-import adapters.
+- Dataset implementations now live in `kurome/data/datasets/*`, and package data adapters import those package-local modules.
 - Runtime helpers previously imported from root `utils.py` now live under package modules:
-  - `cityclassifiers/config/embed_params.py`
-  - `cityclassifiers/config/runtime_args.py`
-  - `cityclassifiers/training/wrapper.py`
-  - `cityclassifiers/training/state_io.py`
-  - `cityclassifiers/training/validation.py`
-- Package runtime modules (`cityclassifiers/*`) no longer import from root `utils.py`.
+  - `kurome/config/embed_params.py`
+  - `kurome/config/runtime_args.py`
+  - `kurome/training/wrapper.py`
+  - `kurome/training/state_io.py`
+  - `kurome/training/validation.py`
+- Package runtime modules (`kurome/*`) no longer import from root `utils.py`.
 - Root-surface policy now treats root implementation modules as removed, retaining only metadata/tooling plus public demo/utility scripts.
-- Inference pipeline model-head imports now route through `cityclassifiers.models.heads`.
-- Inference output formatting now routes through `cityclassifiers.inference.postprocess` helpers shared by single-model, multi-model, and sequence pipelines.
+- Inference pipeline model-head imports now route through `kurome.models.heads`.
+- Inference output formatting now routes through `kurome.inference.postprocess` helpers shared by single-model, multi-model, and sequence pipelines.
 - Config normalization now infers mode from raw config only (no runtime-args fallback coupling), including `model.is_end_to_end` inference for image mode.
 - Config schema now exposes typed mode-specific sections (`predictor_params`, `head_params`, `e2e_params`) for orchestration paths.
 - Training model/criterion setup paths now consume typed normalized config sections instead of ad-hoc `getattr` defaults for core model behavior.
-- Image-mode dataloader setup now lives in `cityclassifiers.data.images` and embeddings loader no longer owns end-to-end image mode branching.
-- Data layer now documents explicit batch-key contracts via `cityclassifiers.data.contracts`.
-- End-to-end image processor loading now routes through `cityclassifiers.data.transforms.load_image_processor` instead of direct CLI import/use.
-- Data adapters now share common train/validation DataLoader construction and summary logging helpers via `cityclassifiers.data.dataloaders`.
+- Image-mode dataloader setup now lives in `kurome.data.images` and embeddings loader no longer owns end-to-end image mode branching.
+- Data layer now documents explicit batch-key contracts via `kurome.data.contracts`.
+- End-to-end image processor loading now routes through `kurome.data.transforms.load_image_processor` instead of direct CLI import/use.
+- Data adapters now share common train/validation DataLoader construction and summary logging helpers via `kurome.data.dataloaders`.
 - README now documents a single quality-gate command and links contributor extension docs.
 - Integration coverage now includes synthetic one-step checks for feature-sequence and image-mode batch paths.
 - Embedding-loop batch preparation now accepts image-mode keys (`pixel_values`/`label`) in addition to embedding keys (`emb`/`val`).
@@ -124,7 +124,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 - Quality gate now enforces a tracked root-surface contract via `check_root_surface.py`.
 - Deprecation docs now include explicit root-surface policy and wrapper-removal checklist timeline.
 - Quality gate now enforces wrapper-command reference scope via `check_wrapper_references.py`.
-- README training examples are now package-first (`python -m cityclassifiers.cli.*`).
+- README training examples are now package-first (`python -m kurome.cli.*`).
 - Quality gate type-check now targets the refactored core package surface explicitly (instead of full-repo strict checking).
 - Quality and smoke pytest invocations now disable capture (`-s`) to avoid environment-specific tmpfile capture failures.
 - README and docs now provide topic-based navigation for core repo workflows (configs, datasets, models, training, inference, checkpoints).
