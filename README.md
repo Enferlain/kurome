@@ -1,3 +1,5 @@
+UNTESTED POST REFACTOR!!!!!!!!!!!!!!! pending more work and actual testing currently...
+
 # kurome
 
 `kurome` is a modular framework for training and deploying scorers and classifiers.
