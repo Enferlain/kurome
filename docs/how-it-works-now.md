@@ -7,14 +7,19 @@ For action-oriented navigation by topic, see `docs/README.md`.
 Main commands:
 
 1. `python launch.py <task> -- <task-specific-args>` (root launcher for common workflows)
-2. `python -m kurome.cli.train_embeddings --config <config.yaml>`
-3. `python -m kurome.cli.train_features --config <config.yaml>`
-4. Dataset generation CLIs:
-`python -m kurome.cli.generate_embeddings ...`, `python -m kurome.cli.generate_feature_sequences ...`
-5. Folder inference CLI:
+2. `python launch.py prepare-data -- <data-args>` (preferred data-prep entrypoint)
+3. `python -m kurome.cli.train_embeddings --config <config.yaml>`
+4. `python -m kurome.cli.train_features --config <config.yaml>`
+5. `python launch.py train-tensors -- --config <config.yaml>`
+5. Low-level data/artifact builder CLIs:
+`python -m kurome.cli.build_image_manifest ...`, `python -m kurome.cli.build_forensic_tensors ...`, `python -m kurome.cli.generate_feature_sequences ...`
+6. Dataset generation CLIs:
+`python -m kurome.cli.generate_embeddings ...`
+7. Folder inference CLI:
 `python -m kurome.cli.infer_folder ...`
 
 Root wrappers are removed. Package CLIs are the canonical path.
+For routine dataset setup, `prepare-data` is the canonical path. The low-level builder CLIs remain available, but using them manually is now redundant unless you need finer control over one artifact stage.
 
 ## 2. Config Flow
 
@@ -49,13 +54,28 @@ Primary config modules:
 ### 3.3 Data Pipeline
 
 1. Dataloader builders:
-`kurome.data.embeddings`, `kurome.data.sequences`, `kurome.data.images`.
+`kurome.data.embeddings`, `kurome.data.sequences`, `kurome.data.images`, `kurome.data.tensors`.
 2. Shared loader helpers:
 `kurome.data.dataloaders`.
 3. Dataset implementations:
 `kurome.data.datasets.*`.
 4. Shared batch contracts:
 `kurome.data.contracts`.
+5. Shared sample/artifact manifest helpers:
+`kurome.sample_manifest`.
+
+Current preferred data shape:
+
+1. one sample manifest row per source image
+2. `source_image_path` for original image access
+3. `artifacts` map for derived tensor/feature outputs
+4. `metadata` for rich sidecar/file metadata
+
+In practice:
+
+1. `images` mode reads the original image path from the manifest
+2. `tensors` mode reads manifest artifact entries pointing to forensic `.npz`
+3. `features` mode reads manifest artifact entries pointing to sequence `.npz`
 
 ### 3.4 Train Loop
 
@@ -94,6 +114,7 @@ See `docs/how-to-add-model.md`.
 1. Add dataset/collate under `kurome/data/datasets`.
 2. Wire a loader builder in `kurome/data/*.py`.
 3. Keep batch contract consistent with `kurome/data/contracts.py`.
+4. Prefer extending the shared sample/artifact manifest flow instead of introducing a new standalone dataset format.
 
 See `docs/how-to-add-dataset.md`.
 

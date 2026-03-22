@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from kurome.data.dataloaders import (
     build_training_dataloader,
     build_validation_dataloader,
@@ -15,15 +17,26 @@ def build_image_training_dataloaders(args, image_processor):
     if image_processor is None:
         raise RuntimeError("Image processor is required for ImageFolderDataset.")
 
+    manifest_path = getattr(args, "manifest_path", None)
     image_data_dir = args.data_root
+    if image_data_dir is None and manifest_path:
+        image_data_dir = str(Path(manifest_path).resolve().parent)
     print(f"Setting up ImageFolderDataset from: {image_data_dir}")
-    print(f"Looking for class folders (0, 1, ...) directly inside: {image_data_dir}")
+    class_names = getattr(args, "class_names", None)
+    if manifest_path:
+        print(f"Using image manifest: {manifest_path}")
+    else:
+        print(f"Looking for class folders directly inside: {image_data_dir}")
+    if class_names:
+        print(f"Configured class order: {class_names}")
 
     dataset = ImageFolderDataset(
         root_dir=image_data_dir,
         transform=image_processor,
         validation_split_count=args.val_split_count,
         seed=args.seed,
+        class_names=class_names,
+        manifest_path=manifest_path,
     )
     args.num_labels = dataset.num_labels
     print(f"DEBUG: Updated args.num_labels from ImageFolderDataset: {args.num_labels}")

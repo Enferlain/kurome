@@ -13,6 +13,7 @@ from .dataloaders import (
 from .embeddings import build_embedding_training_dataloaders
 from .images import build_image_training_dataloaders
 from .sequences import build_feature_sequence_dataloaders
+from .tensors import build_tensor_training_dataloaders
 from .transforms import load_image_processor
 
 __all__ = [
@@ -25,5 +26,6 @@ __all__ = [
     "build_embedding_training_dataloaders",
     "build_image_training_dataloaders",
     "build_feature_sequence_dataloaders",
+    "build_tensor_training_dataloaders",
     "load_image_processor",
 ]

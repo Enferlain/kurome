@@ -31,9 +31,6 @@ class GHMC_Loss(nn.Module):
 
     def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         num_classes = logits.shape[-1]
-        if num_classes == 1 and self.acc_sum.device != logits.device:
-            print("Warning: GHMC_Loss might work best with num_classes >= 2 and CE-style targets.")
-
         if num_classes <= 1 and logits.ndim > 1:
             logits = logits.squeeze(-1)
 
@@ -67,11 +64,11 @@ class GHMC_Loss(nn.Module):
 
         num_examples = logits.shape[0]
         safe_acc_sum = self.acc_sum.clamp(min=1e-6)
+        valid_bins = (bin_counts > 0).sum().clamp(min=1).float()
         beta = num_examples / safe_acc_sum
-        weights = beta[bin_indices]
+        weights = beta[bin_indices] / valid_bins
 
         if num_classes == 1:
-            print("Warning/TODO: GHMC_Loss with single logit output needs review.")
             raise NotImplementedError("GHMC_Loss currently expects CE-style input (logits shape [N, C] where C>=2).")
         if num_classes >= 2:
             ce_loss = F.cross_entropy(logits, targets_long, reduction="none")
@@ -80,9 +77,11 @@ class GHMC_Loss(nn.Module):
             raise ValueError(f"Invalid num_classes ({num_classes})")
 
         if self.reduction == "mean":
-            return weighted_loss.mean()
+            return weighted_loss.sum() / max(num_examples, 1)
         if self.reduction == "sum":
             return weighted_loss.sum()
+        if self.reduction == "none":
+            return weighted_loss
         return weighted_loss
 
 
@@ -98,18 +97,32 @@ class FocalLoss(nn.Module):
             raise ValueError(f"Invalid gamma: {gamma}")
         self.gamma = gamma
         self.reduction = reduction
-        self.weight = weight
+        if weight is None:
+            self.register_buffer("weight", None)
+        else:
+            self.register_buffer("weight", weight.detach().float().clone())
 
         if self.weight is not None:
             print(f"DEBUG FocalLoss Init: Using class weights: {self.weight.tolist()}")
 
     def forward(self, inputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        ce_loss = F.cross_entropy(inputs.float(), targets.long(), reduction="none", weight=self.weight)
-        pt = torch.exp(-ce_loss)
-        focal_loss_unreduced = (1 - pt).pow(self.gamma) * ce_loss
+        logits = inputs.float()
+        targets_long = targets.long()
+        log_probs = F.log_softmax(logits, dim=-1)
+        log_pt = log_probs.gather(1, targets_long.unsqueeze(1)).squeeze(1)
+        pt = log_pt.exp()
+
+        if self.weight is None:
+            alpha_t = torch.ones_like(pt)
+        else:
+            alpha_t = self.weight.to(logits.device)[targets_long]
+
+        focal_loss_unreduced = -alpha_t * (1 - pt).pow(self.gamma) * log_pt
 
         if self.reduction == "mean":
-            return torch.mean(focal_loss_unreduced)
+            if self.weight is None:
+                return torch.mean(focal_loss_unreduced)
+            return focal_loss_unreduced.sum() / alpha_t.sum().clamp(min=1e-12)
         if self.reduction == "sum":
             return torch.sum(focal_loss_unreduced)
         if self.reduction == "none":

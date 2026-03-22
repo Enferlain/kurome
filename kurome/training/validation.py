@@ -42,6 +42,9 @@ def run_validation_embeddings(model, val_loader, criterion, device, scaler, best
             emb_input = batch_data.get("emb")
             target_val = batch_data.get("val")
             if emb_input is None or target_val is None:
+                emb_input = batch_data.get("pixel_values")
+                target_val = batch_data.get("label")
+            if emb_input is None or target_val is None:
                 continue
 
             emb_input = emb_input.to(device)

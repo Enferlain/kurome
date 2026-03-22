@@ -213,21 +213,60 @@ def normalize_experiment_config(
     )
 
     mode = _infer_mode_from_raw(raw)
-    if mode not in {"embeddings", "features", "images"}:
+    if mode not in {"embeddings", "features", "images", "tensors"}:
         raise ValueError(
             f"Config key 'data.mode' in '{config_path}' must be one of "
-            "'embeddings', 'features', or 'images'."
+            "'embeddings', 'features', 'images', or 'tensors'."
         )
 
     feature_dir_name = data_raw.get("feature_dir_name")
     if feature_dir_name is not None and not isinstance(feature_dir_name, str):
         raise ValueError(f"Config key 'data.feature_dir_name' in '{config_path}' must be a string.")
-    if mode == "features" and not feature_dir_name:
-        raise ValueError("Config key 'data.feature_dir_name' is required when data.mode='features'.")
+    manifest_path = data_raw.get("manifest_path")
+    if manifest_path is not None and (not isinstance(manifest_path, str) or not manifest_path.strip()):
+        raise ValueError(f"Config key 'data.manifest_path' in '{config_path}' must be a non-empty string.")
+    artifact_key = data_raw.get("artifact_key")
+    if artifact_key is not None and (not isinstance(artifact_key, str) or not artifact_key.strip()):
+        raise ValueError(f"Config key 'data.artifact_key' in '{config_path}' must be a non-empty string.")
+    if mode == "features" and not feature_dir_name and not (manifest_path and artifact_key):
+        raise ValueError(
+            "Config for data.mode='features' must provide either 'data.feature_dir_name' "
+            "or both 'data.manifest_path' and 'data.artifact_key'."
+        )
 
-    data_root = data_raw.get("data_root", raw.get("data_root", "data"))
-    if not isinstance(data_root, str) or not data_root:
-        raise ValueError(f"Config key 'data_root' in '{config_path}' must be a non-empty string.")
+    class_names_raw = data_raw.get("class_names")
+    if class_names_raw is None:
+        class_names: tuple[str, ...] = ()
+    else:
+        if not isinstance(class_names_raw, list) or not all(
+            isinstance(item, str) and item.strip() for item in class_names_raw
+        ):
+            raise ValueError(
+                f"Config key 'data.class_names' in '{config_path}' must be a list of non-empty strings."
+            )
+        class_names = tuple(item.strip() for item in class_names_raw)
+
+    data_root_raw = data_raw.get("data_root", raw.get("data_root"))
+    if data_root_raw is None:
+        data_root: str | None = None
+    elif isinstance(data_root_raw, str) and data_root_raw.strip():
+        data_root = data_root_raw
+    else:
+        raise ValueError(f"Config key 'data_root' in '{config_path}' must be a non-empty string when provided.")
+
+    if mode == "tensors":
+        if not manifest_path:
+            raise ValueError(f"Config key 'data.manifest_path' is required when data.mode='tensors'.")
+        if not artifact_key:
+            raise ValueError(f"Config key 'data.artifact_key' is required when data.mode='tensors'.")
+    elif mode == "features" and manifest_path and artifact_key:
+        pass
+    elif mode != "images" and not data_root:
+        raise ValueError(f"Config key 'data_root' in '{config_path}' is required when data.mode='{mode}'.")
+    if mode == "images" and not data_root and not manifest_path:
+        raise ValueError(
+            f"Config in '{config_path}' must provide either 'data.data_root' or 'data.manifest_path' when data.mode='images'."
+        )
 
     val_split_raw = data_raw.get("val_split_count", train_raw.get("val_split_count", 0))
 
@@ -235,6 +274,9 @@ def normalize_experiment_config(
         mode=mode,
         data_root=data_root,
         feature_dir_name=feature_dir_name,
+        manifest_path=manifest_path.strip() if isinstance(manifest_path, str) else None,
+        artifact_key=artifact_key.strip() if isinstance(artifact_key, str) else None,
+        class_names=class_names,
         val_split_count=_as_int(
             val_split_raw,
             key="data.val_split_count",
@@ -370,6 +412,8 @@ def normalize_experiment_config(
         raise ValueError("Config key 'head_params.output_mode' is required when data.mode='images'.")
     if mode == "features" and head_params.output_mode is None:
         raise ValueError("Config key 'head_params.output_mode' is required when data.mode='features'.")
+    if mode == "tensors" and head_params.output_mode is None:
+        raise ValueError("Config key 'head_params.output_mode' is required when data.mode='tensors'.")
     if mode == "embeddings" and predictor_params.output_mode is None and head_params.output_mode is None:
         raise ValueError(
             "Config requires predictor_params.output_mode or head_params.output_mode when data.mode='embeddings'."

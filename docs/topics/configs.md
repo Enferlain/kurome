@@ -24,12 +24,22 @@ Top-level sections expected in practice:
 1. `embeddings`: vector-per-image training path
 2. `features`: sequence-of-features training path
 3. `images`: end-to-end image path
+4. `tensors`: spatial forensic-tensor path
 
 ## Mode-Critical Fields
 
-1. `data.mode=features` requires `data.feature_dir_name`.
-2. `data.mode=images` requires `head_params.output_mode`.
-3. `data.mode=embeddings` requires `predictor_params.output_mode` or `head_params.output_mode`.
+1. `data.mode=features` requires either `data.feature_dir_name`, or both `data.manifest_path` and `data.artifact_key`.
+2. `data.mode=tensors` requires both `data.manifest_path` and `data.artifact_key`.
+3. `data.mode=images` requires `head_params.output_mode`.
+4. `data.mode=embeddings` requires `predictor_params.output_mode` or `head_params.output_mode`.
+
+Preferred modern shape:
+
+1. Use one sample manifest as the dataset source of truth.
+2. Attach derived artifacts under `artifacts.<artifact_key>`.
+3. Point `features` or `tensors` configs at the manifest plus the artifact key.
+
+The older folder-only feature-sequence setup is still supported, but it is now redundant when your feature artifacts are already attached to the manifest.
 
 ## Runtime Commands
 

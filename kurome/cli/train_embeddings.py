@@ -26,6 +26,7 @@ from kurome.config.loader import load_experiment_config
 from kurome.config.schema import ExperimentConfig
 from kurome.data.embeddings import build_embedding_training_dataloaders
 from kurome.data.images import build_image_training_dataloaders
+from kurome.data.tensors import build_tensor_training_dataloaders
 from kurome.data.transforms import load_image_processor
 from kurome.models.factory import (
     build_criterion,
@@ -72,6 +73,8 @@ def setup_dataloaders(args, image_processor=None):
     Uses image data adapter in E2E mode, otherwise embedding data adapter.
     """
     try:
+        if getattr(args, "data_mode", None) == "tensors":
+            return build_tensor_training_dataloaders(args)
         if getattr(args, "is_end_to_end", False):
             return build_image_training_dataloaders(args, image_processor=image_processor)
         return build_embedding_training_dataloaders(args, image_processor=image_processor)
@@ -100,7 +103,7 @@ def setup_model_criterion(args, dataset, experiment: ExperimentConfig):
     e2e_cfg = experiment.e2e_params
     if head_cfg is None:
         exit("Config Error: head_params must be set.")
-    if not e2e_cfg.is_end_to_end and predictor_cfg is None:
+    if getattr(args, "data_mode", None) not in {"images", "tensors"} and not e2e_cfg.is_end_to_end and predictor_cfg is None:
         exit("Config Error: predictor_params must be set for embeddings mode.")
     head = head_cfg
     predictor = predictor_cfg
@@ -137,7 +140,11 @@ def setup_model_criterion(args, dataset, experiment: ExperimentConfig):
               print(f"Warning: Length of weights in config ({len(args.weights)}) != num_classes ({final_num_classes}). Ignoring weights.")
 
     model_output_mode = None
-    if e2e_cfg.is_end_to_end:
+    if getattr(args, "data_mode", None) == "tensors":
+        model_output_mode = head.output_mode
+        if model_output_mode is None:
+            exit("Error: 'head_output_mode' missing in config for tensors mode.")
+    elif e2e_cfg.is_end_to_end:
         model_output_mode = head.output_mode
         if model_output_mode is None:
             exit("Error: 'head_output_mode' missing in config for E2E mode.")
@@ -157,9 +164,9 @@ def setup_model_criterion(args, dataset, experiment: ExperimentConfig):
             output_mode=model_output_mode,
             class_weights_tensor=class_weights_tensor,
             args=args,
-            allow_bce_multiclass=True,
-            strict_regression_num_classes=False,
-            require_linear_logits_losses=False,
+            allow_bce_multiclass=False,
+            strict_regression_num_classes=True,
+            require_linear_logits_losses=True,
         )
     except ValueError as e:
         exit(f"Config Error: {e}")
@@ -180,7 +187,26 @@ def setup_model_criterion(args, dataset, experiment: ExperimentConfig):
     model = None
     amp_dtype, enabled_amp = setup_precision(args, TARGET_DEV) # Get compute dtype
 
-    if e2e_cfg.is_end_to_end:
+    if getattr(args, "data_mode", None) == "tensors":
+        tensor_model_id = str(experiment.model.model_id or "tensor_cnn_model").strip().lower()
+        print(f"DEBUG: Instantiating tensor model '{tensor_model_id}' ...")
+        try:
+            model = build_model_with_filtered_kwargs(
+                tensor_model_id,
+                {
+                    "input_channels": getattr(args, "input_channels", None),
+                    "hidden_dim": head.hidden_dim,
+                    "num_classes": final_num_classes,
+                    "num_res_blocks": head.num_res_blocks,
+                    "dropout_rate": head.dropout_rate,
+                    "output_mode": head.output_mode,
+                },
+            )
+        except Exception as e:
+            print(f"Error details during tensor model instantiation: {e}")
+            traceback.print_exc()
+            exit(f"Error instantiating tensor model '{tensor_model_id}'.")
+    elif e2e_cfg.is_end_to_end:
         print("DEBUG: Instantiating EarlyExtractAnatomyModel ...")
         try:
             model = build_model(
@@ -361,7 +387,7 @@ def main():
 
     # <<< NEW: Load Processor BEFORE Dataset if End-to-End >>>
     image_processor = None
-    if experiment.e2e_params.is_end_to_end:
+    if experiment.data.mode == "images" and experiment.e2e_params.is_end_to_end:
         print("DEBUG Main: Loading processor for end-to-end model...")
         if not experiment.model.base_vision_model:
              exit("Error: base_vision_model needed for end-to-end processor loading.")

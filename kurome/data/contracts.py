@@ -15,6 +15,9 @@ SEQUENCE_BATCH_KEYS = ("sequence", "mask", "label")
 # Image mode expects a dictionary batch with these keys.
 IMAGE_BATCH_KEYS = ("pixel_values", "label")
 
+# Tensor mode currently reuses the image-style batch contract.
+TENSOR_BATCH_KEYS = IMAGE_BATCH_KEYS
+
 
 class EmbeddingBatch(TypedDict):
     """Embedding-mode batch item contract."""
@@ -33,6 +36,13 @@ class SequenceBatch(TypedDict):
 
 class ImageBatch(TypedDict):
     """Image-mode batch item contract."""
+
+    pixel_values: torch.Tensor
+    label: torch.Tensor
+
+
+class TensorBatch(TypedDict):
+    """Tensor-mode batch item contract."""
 
     pixel_values: torch.Tensor
     label: torch.Tensor

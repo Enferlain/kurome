@@ -103,7 +103,10 @@ def build_criterion(
             raise ValueError(f"loss_function='focal' requires num_classes > 1, got {num_classes}.")
         if require_linear_logits_losses and output_mode_name != "linear":
             raise ValueError(f"loss_function='focal' expects output_mode='linear', got '{output_mode_name}'.")
-        return FocalLoss(gamma=getattr(args, "focal_loss_gamma", 2.0))
+        return FocalLoss(
+            gamma=getattr(args, "focal_loss_gamma", 2.0),
+            weight=class_weights_tensor,
+        )
 
     if name == "crossentropy":
         if num_classes <= 1:

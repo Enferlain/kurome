@@ -7,6 +7,53 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 ## [Unreleased]
 
+### 2026-03-22
+
+### Added
+
+- Sample-centric manifest helpers in `kurome/sample_manifest.py` with support for attaching derived artifacts to the same sample row.
+- Rich image manifest builder in `kurome/cli/build_image_manifest.py` with:
+  - named-class folder support
+  - split-aware folder scanning
+  - sidecar `metadata.jsonl` merging
+  - same-stem `.txt` sidecar parsing
+  - sample-centric rows including `sample_id`, `source_image_path`, `metadata`, and `artifacts`
+- Manifest-backed tensor training path:
+  - `data.mode: tensors`
+  - `kurome/data/datasets/tensor_dataset.py`
+  - `kurome/data/tensors.py`
+  - `kurome/models/heads/tensor_cnn.py`
+- Manifest-backed feature-sequence dataset:
+  - `kurome/data/datasets/manifest_sequence_dataset.py`
+  - `data.mode: features` can now read `data.manifest_path` + `data.artifact_key`
+- Task-specific forensic sequence heads:
+  - `kurome/models/heads/forensic_heads.py`
+  - `forensic_mil_head_model`
+  - `forensic_multipool_head_model`
+  - `forensic_convmil_head_model`
+- Unified data orchestration CLI:
+  - `kurome/cli/prepare_data.py`
+  - `launch.py prepare-data`
+- Root launcher alias:
+  - `launch.py train-tensors`
+
+### Changed
+
+- The manifest is now the shared data contract for images, forensic tensors, and feature-sequence artifacts.
+- `build_image_manifest.py`, `build_forensic_tensors.py`, and `generate_feature_sequences.py` now act as artifact producers for the shared manifest system instead of separate dataset systems.
+- `prepare-data` is now the recommended user-facing data entrypoint for routine workflows.
+- `data.mode: features` no longer requires folder-only sequence datasets; it can train directly from feature artifacts attached to the sample manifest.
+- Image-mode datasets/loaders can now read manifests directly, accept named class folders, and preserve configured class order.
+- `train_features` now supports registry-selected sequence heads via `model.model_id` instead of only the default head model.
+- `train_embeddings` now supports tensor-mode dataloaders/model setup and uses stricter criterion validation for logits-based losses.
+- Relative artifact paths stored in manifests now work even when artifacts live outside the manifest directory tree.
+
+### Fixed
+
+- `FocalLoss` now computes focal weighting from logits correctly and supports configured class weights through the factory.
+- `GHMC_Loss` weighting/reduction behavior was tightened for CE-style classification inputs.
+- Validation helpers now accept image/tensor-style batch keys (`pixel_values`/`label`) in the shared embedding/tensor validation path.
+
 ### 2026-02-15
 
 ### Added

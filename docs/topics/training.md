@@ -12,6 +12,18 @@ python -m kurome.cli.train_embeddings --config config/your_config.yaml
 ```bash
 python -m kurome.cli.train_features --config config/your_config.yaml
 ```
+3. Forensic tensors:
+```bash
+python launch.py train-tensors -- --config config/your_config.yaml
+```
+
+For data preparation, prefer:
+
+```bash
+python launch.py prepare-data -- --src /abs/path/to/dataset --manifest /abs/path/to/manifest.jsonl
+```
+
+Manually running the low-level builder CLIs before every run is now redundant for most workflows when `prepare-data` is sufficient.
 
 ## Runtime Stack
 
@@ -27,7 +39,7 @@ python -m kurome.cli.train_features --config config/your_config.yaml
 1. Start a new run from YAML config.
 2. Resume from a checkpoint (`args.resume` in config).
 3. Tune optimizer/lr scheduler settings in `train` config block.
-4. Switch mode with `data.mode` (`embeddings`, `features`, `images`).
+4. Switch mode with `data.mode` (`embeddings`, `features`, `images`, `tensors`).
 
 ## Verification
 

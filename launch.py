@@ -14,10 +14,14 @@ REPO_ROOT = Path(__file__).resolve().parent
 TASKS: dict[str, list[str]] = {
     # Training
     "train-embeddings": [sys.executable, "-m", "kurome.cli.train_embeddings"],
+    "train-tensors": [sys.executable, "-m", "kurome.cli.train_embeddings"],
     "train-features": [sys.executable, "-m", "kurome.cli.train_features"],
     # Dataset / feature generation
     "build-embeddings": [sys.executable, "-m", "kurome.cli.generate_embeddings"],
     "build-features": [sys.executable, "-m", "kurome.cli.generate_feature_sequences"],
+    "build-manifest": [sys.executable, "-m", "kurome.cli.build_image_manifest"],
+    "build-forensic-tensors": [sys.executable, "-m", "kurome.cli.build_forensic_tensors"],
+    "prepare-data": [sys.executable, "-m", "kurome.cli.prepare_data"],
     # Inference (folder pipeline)
     "infer-folder": [sys.executable, "-m", "kurome.cli.infer_folder"],
 }

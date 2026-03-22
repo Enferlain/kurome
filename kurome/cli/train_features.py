@@ -26,7 +26,7 @@ from kurome.config.loader import load_experiment_config
 from kurome.config.schema import ExperimentConfig
 from kurome.config.runtime_args import write_config
 from kurome.data.sequences import build_feature_sequence_dataloaders
-from kurome.models.factory import build_criterion, build_model, resolve_num_classes
+from kurome.models.factory import build_criterion, build_model_with_filtered_kwargs, resolve_num_classes
 from kurome.training.state_io import (
     load_optimizer_state,
     load_scaler_state,
@@ -127,39 +127,40 @@ def setup_model_criterion(args, dataset, experiment: ExperimentConfig):
 
     print(f"DEBUG: Criterion set to: {type(criterion).__name__}")
 
-    # --- 5. Instantiate the HeadModel (Using Validated Classes) ---
-    print(f"DEBUG: Instantiating HeadModel...")
+    # --- 5. Instantiate the sequence model (Using Validated Classes) ---
+    model_id = str(experiment.model.model_id or "head_model").strip().lower()
+    print(f"DEBUG: Instantiating sequence model '{model_id}'...")
     try:
         head_features = head.features
         if head_features is None: exit("Error: 'head_features' not specified.")
 
-        hidden_dim = head.hidden_dim
-        pooling_strategy = head.pooling_strategy
-        num_res_blocks = head.num_res_blocks
-        dropout_rate = head.dropout_rate
-        output_mode = head.output_mode or "linear"
-        attn_pool_heads = head.attn_pool_heads
-        attn_pool_dropout = head.attn_pool_dropout
-
-        model = build_model(
-            "head_model",
-            features=head_features,
-            num_classes=args.num_classes, # Use the FINAL validated number
-            pooling_strategy=pooling_strategy, # Pass strategy for info, though pooling done elsewhere now
-            hidden_dim=hidden_dim,
-            num_res_blocks=num_res_blocks,
-            dropout_rate=dropout_rate,
-            output_mode=output_mode,
-            attn_pool_heads=attn_pool_heads,
-            attn_pool_dropout=attn_pool_dropout,
+        model = build_model_with_filtered_kwargs(
+            model_id,
+            {
+                "features": head_features,
+                "num_classes": args.num_classes,
+                "pooling_strategy": head.pooling_strategy,
+                "hidden_dim": head.hidden_dim,
+                "num_res_blocks": head.num_res_blocks,
+                "dropout_rate": head.dropout_rate,
+                "output_mode": head.output_mode or "linear",
+                "attn_pool_heads": head.attn_pool_heads,
+                "attn_pool_dropout": head.attn_pool_dropout,
+                "num_attn_heads": head.attn_pool_heads,
+                "attn_dropout": head.attn_pool_dropout,
+                "rms_norm_eps": getattr(args, "rms_norm_eps", None),
+                "topk_ratio": getattr(args, "topk_ratio", None),
+                "min_topk": getattr(args, "min_topk", None),
+                "conv_kernel_size": getattr(args, "conv_kernel_size", None),
+            },
         )
     except Exception as e:
-        print(f"Error details during HeadModel instantiation: {e}")
+        print(f"Error details during sequence model instantiation: {e}")
         traceback.print_exc()
-        exit(f"Error instantiating HeadModel.")
+        exit(f"Error instantiating sequence model '{model_id}'.")
 
     model.to(TARGET_DEV)
-    print(f"HeadModel (Output Classes: {args.num_classes}) and criterion setup complete.")
+    print(f"Sequence model '{model_id}' (Output Classes: {args.num_classes}) and criterion setup complete.")
     return model, criterion
 
 # Version 2.5.1: Improved float conversion for optimizer/scheduler args

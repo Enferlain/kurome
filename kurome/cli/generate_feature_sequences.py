@@ -3,6 +3,7 @@ import math
 import os
 import sys
 import argparse
+from pathlib import Path
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -12,6 +13,11 @@ import traceback
 # <<< Add threading imports >>>
 from concurrent.futures import ThreadPoolExecutor, Future
 import time
+
+from kurome.sample_manifest import (
+    attach_artifacts_by_source,
+    manifest_relative_path,
+)
 
 try:
     from transformers import AutoProcessor, AutoModel, PretrainedConfig
@@ -63,8 +69,52 @@ def parse_args():
     parser.add_argument('--compute_precision', type=str, default='bf16', choices=['fp32', 'bf16', 'fp16'], help="Precision for model computation (default: bf16).")
     parser.add_argument('--save_precision', type=str, default='fp16', choices=['fp32', 'fp16'], help="Precision for saving features (default: fp16).")
     parser.add_argument('--output_subdir', type=str, default=None, help="Optional specific subdirectory name under output_dir_root.")
+    parser.add_argument('--manifest', type=Path, default=None, help="Optional sample manifest to update with generated feature artifacts.")
+    parser.add_argument('--manifest_out', type=Path, default=None, help="Where to write the updated manifest. Defaults to overwriting --manifest.")
+    parser.add_argument('--artifact_key', type=str, default=None, help="Artifact key to store in the manifest. Defaults to output_subdir or model-derived subdir name.")
+    parser.add_argument('--artifact_path_mode', choices=['relative', 'absolute'], default='relative', help="How feature artifact paths are stored inside the manifest.")
     args = parser.parse_args()
     return args
+
+
+def update_manifest_with_feature_artifacts(args, output_subdir_name, all_image_tasks):
+    if args.manifest is None:
+        return
+
+    manifest_path = args.manifest.resolve()
+    manifest_out = args.manifest_out.resolve() if args.manifest_out else manifest_path
+    artifact_key = args.artifact_key or output_subdir_name
+    payloads_by_source_path = {}
+
+    for output_path, _, _, img_path in all_image_tasks:
+        if not os.path.exists(output_path):
+            continue
+
+        with np.load(output_path) as data:
+            if 'sequence' not in data:
+                continue
+            sequence = data['sequence']
+            original_shape = data['original_shape'].tolist() if 'original_shape' in data else None
+
+        payloads_by_source_path[str(Path(img_path).resolve())] = {
+            "path": manifest_relative_path(manifest_out, Path(output_path), args.artifact_path_mode),
+            "artifact_type": "feature_sequence_npz",
+            "format": "npz",
+            "npz_key": "sequence",
+            "model_name": args.model_name,
+            "output_subdir": output_subdir_name,
+            "save_precision": args.save_precision,
+            "sequence_length": int(sequence.shape[0]),
+            "feature_dim": int(sequence.shape[1]) if sequence.ndim == 2 else None,
+            "original_shape": original_shape,
+        }
+    updates = attach_artifacts_by_source(
+        manifest_path=manifest_path,
+        manifest_out=manifest_out,
+        artifact_key=artifact_key,
+        payloads_by_source_path=payloads_by_source_path,
+    )
+    print(f"Updated {updates} manifest rows in {manifest_out} with feature artifact '{artifact_key}'")
 
 # --- Model and Processor Loading (Simplified to use AutoModel/AutoProcessor always) ---
 def load_model_and_processor(model_name, device, compute_dtype):
@@ -358,6 +408,7 @@ def generate_features(args, model, processor, device, compute_dtype, save_dtype,
     print(f"Failed during process:  {error_count} images")
     print(f"Total images checked:   {skipped_count + processed_count + error_count} / {total_images}")
     print(f"Features saved to: {final_output_dir}")
+    update_manifest_with_feature_artifacts(args, output_subdir_name, all_image_tasks)
 
 
 # --- Main Execution ---

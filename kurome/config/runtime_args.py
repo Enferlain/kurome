@@ -53,7 +53,11 @@ def parse_and_load_args(config_path: str):
         except (KeyError, TypeError):
             return default
 
-    args.data_root = get_optional_config("data_root", conf, default="data")
+    args.data_root = get_optional_config(
+        "data.data_root",
+        conf,
+        default=get_optional_config("data_root", conf, default=None),
+    )
     args.wandb_project = get_optional_config("wandb_project", conf, default="city-classifiers")
     args.resume = get_optional_config("resume", conf, default=None)
     args.base = get_required_config("model.base", conf)
@@ -64,6 +68,17 @@ def parse_and_load_args(config_path: str):
     args.embed_ver = get_optional_config("model.embed_ver", conf)
 
     args.data_mode = get_required_config("data.mode", conf)
+    class_names_conf = get_optional_config("data.class_names", conf, default=None)
+    if class_names_conf is not None:
+        if not isinstance(class_names_conf, list) or not all(
+            isinstance(name, str) and name.strip() for name in class_names_conf
+        ):
+            raise ValueError("Config Error: 'data.class_names' must be a list of non-empty strings.")
+        args.class_names = [name.strip() for name in class_names_conf]
+    else:
+        args.class_names = None
+    args.manifest_path = get_optional_config("data.manifest_path", conf, default=None)
+    args.artifact_key = get_optional_config("data.artifact_key", conf, default=None)
 
     if args.data_mode == "embeddings":
         print("DEBUG: Loading config for EMBEDDINGS mode...")
@@ -114,7 +129,12 @@ def parse_and_load_args(config_path: str):
     elif args.data_mode == "features":
         print("DEBUG: Loading config for FEATURES mode...")
         args.is_end_to_end = False
-        args.feature_dir_name = get_required_config("data.feature_dir_name", conf)
+        args.feature_dir_name = get_optional_config("data.feature_dir_name", conf, default=None)
+        if not args.feature_dir_name and not (args.manifest_path and args.artifact_key):
+            raise ValueError(
+                "Config Error: features mode requires 'data.feature_dir_name' or both "
+                "'data.manifest_path' and 'data.artifact_key'."
+            )
         args.preload_data = False
 
         head_conf = get_optional_config("head_params", conf, default={})
@@ -149,9 +169,24 @@ def parse_and_load_args(config_path: str):
             args.attn_pool_heads = attn_conf.get("attn_pool_heads", 8)
             args.attn_pool_dropout = attn_conf.get("attn_pool_dropout", 0.1)
 
+    elif args.data_mode == "tensors":
+        print("DEBUG: Loading config for TENSORS mode...")
+        args.is_end_to_end = False
+        if not args.manifest_path:
+            raise ValueError("Config Error: 'data.manifest_path' must be specified for tensors mode.")
+        if not args.artifact_key:
+            raise ValueError("Config Error: 'data.artifact_key' must be specified for tensors mode.")
+        args.preload_data = False
+
+        head_conf = get_optional_config("head_params", conf, default={})
+        args.head_hidden_dim = head_conf.get("hidden_dim", 256)
+        args.head_num_res_blocks = head_conf.get("num_res_blocks", 3)
+        args.head_dropout_rate = head_conf.get("dropout_rate", 0.1)
+        args.head_output_mode = get_required_config("head_params.output_mode", conf)
+
     else:
         raise ValueError(
-            f"Invalid data.mode '{args.data_mode}' in config. Must be 'embeddings', 'features', or 'images'."
+            f"Invalid data.mode '{args.data_mode}' in config. Must be 'embeddings', 'features', 'images', or 'tensors'."
         )
 
     train_conf = get_required_config("train", conf)
@@ -207,8 +242,36 @@ def parse_and_load_args(config_path: str):
         args.weights = None
         args.num_labels = 0
         if labels_conf:
-            valid_labels = {str(k): v for k, v in labels_conf.items() if str(k).isdigit()}
-            if valid_labels:
+            normalized_labels_conf = {str(k): v for k, v in labels_conf.items()}
+            digit_keys = [key for key in normalized_labels_conf if key.isdigit()]
+            named_keys = [key for key in normalized_labels_conf if not key.isdigit()]
+
+            if named_keys and args.class_names is None:
+                args.class_names = list(normalized_labels_conf.keys())
+
+            if named_keys:
+                if not args.class_names:
+                    raise ValueError(
+                        "Config Error: named labels require 'data.class_names' or label keys in desired order."
+                    )
+                missing = [name for name in args.class_names if name not in normalized_labels_conf]
+                if missing:
+                    raise ValueError(
+                        f"Config Error: labels missing entries for class_names: {missing}"
+                    )
+                args.num_labels = len(args.class_names)
+                args.labels = {
+                    str(index): normalized_labels_conf[class_name].get("name", class_name)
+                    for index, class_name in enumerate(args.class_names)
+                }
+                weights = [1.0] * args.num_labels
+                for index, class_name in enumerate(args.class_names):
+                    label_conf = normalized_labels_conf[class_name]
+                    with suppress(ValueError, TypeError):
+                        weights[index] = float(label_conf.get("loss", 1.0))
+                args.weights = weights
+            elif digit_keys:
+                valid_labels = {key: normalized_labels_conf[key] for key in digit_keys}
                 args.labels = {k: v.get("name", k) for k, v in valid_labels.items()}
                 try:
                     args.num_labels = max(int(k) for k in args.labels) + 1
@@ -242,6 +305,8 @@ def parse_and_load_args(config_path: str):
         raise SystemExit("Config Error: Missing 'head_output_mode' in 'head_params' for features mode.")
     if args.data_mode == "images" and not getattr(args, "head_output_mode", None):
         raise SystemExit("Config Error: Missing 'head_output_mode' in 'head_params' for images mode.")
+    if args.data_mode == "tensors" and not getattr(args, "head_output_mode", None):
+        raise SystemExit("Config Error: Missing 'head_output_mode' in 'head_params' for tensors mode.")
 
     return args
 

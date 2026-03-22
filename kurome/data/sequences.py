@@ -9,24 +9,40 @@ from kurome.data.dataloaders import (
     build_validation_dataloader,
     log_train_val_loader_summary,
 )
+from kurome.data.datasets.manifest_sequence_dataset import ManifestFeatureSequenceDataset
 from kurome.data.datasets.sequence_dataset import FeatureSequenceDataset, collate_sequences
 
 
 def build_feature_sequence_dataloaders(args):
     """Build dataset + dataloaders for sequence feature training."""
-    feature_root_dir = os.path.join(args.data_root, args.feature_dir_name)
-    print(f"Setting up FeatureSequenceDataset (pooling in __getitem__) from: {feature_root_dir}")
-
-    dataset = FeatureSequenceDataset(
-        feature_root_dir=feature_root_dir,
-        validation_split_count=args.val_split_count,
-        seed=args.seed,
-        preload=getattr(args, "preload_data", False),
-        preload_limit_gb=getattr(args, "preload_limit_gb", 30.0),
-    )
+    manifest_path = getattr(args, "manifest_path", None)
+    artifact_key = getattr(args, "artifact_key", None)
+    if manifest_path and artifact_key:
+        print(
+            "Setting up ManifestFeatureSequenceDataset "
+            f"from manifest={manifest_path!r}, artifact_key={artifact_key!r}"
+        )
+        dataset = ManifestFeatureSequenceDataset(
+            manifest_path=manifest_path,
+            artifact_key=artifact_key,
+            validation_split_count=args.val_split_count,
+            seed=args.seed,
+            class_names=getattr(args, "class_names", None),
+        )
+    else:
+        feature_root_dir = os.path.join(args.data_root, args.feature_dir_name)
+        print(f"Setting up FeatureSequenceDataset (pooling in __getitem__) from: {feature_root_dir}")
+        dataset = FeatureSequenceDataset(
+            feature_root_dir=feature_root_dir,
+            validation_split_count=args.val_split_count,
+            seed=args.seed,
+            preload=getattr(args, "preload_data", False),
+            preload_limit_gb=getattr(args, "preload_limit_gb", 30.0),
+        )
     args.num_labels = dataset.num_labels
     print(f"DEBUG: Updated args.num_labels from FeatureSequenceDataset: {args.num_labels}")
-    if len(dataset.train_indices) == 0:
+    train_sample_count = len(getattr(dataset, "train_indices", getattr(dataset, "train_items", [])))
+    if train_sample_count == 0:
         raise RuntimeError("Training dataset partition is empty.")
 
     val_loader = build_validation_dataloader(
@@ -48,12 +64,12 @@ def build_feature_sequence_dataloaders(args):
     log_train_val_loader_summary(
         mode_name="feature-sequence",
         train_loader=train_loader,
-        train_samples=len(dataset.train_indices),
+        train_samples=train_sample_count,
         val_loader=val_loader,
         val_split_count=args.val_split_count,
     )
 
-    num_train_samples = len(dataset.train_indices)
+    num_train_samples = train_sample_count
     if num_train_samples == 0:
         raise RuntimeError("No training samples available after split.")
     steps_per_epoch = num_train_samples // args.batch

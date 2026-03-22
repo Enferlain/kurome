@@ -23,8 +23,11 @@ class DataConfig:
     """Normalized data configuration."""
 
     mode: str
-    data_root: str
+    data_root: str | None
     feature_dir_name: str | None
+    manifest_path: str | None
+    artifact_key: str | None
+    class_names: tuple[str, ...]
     val_split_count: int
 
 
